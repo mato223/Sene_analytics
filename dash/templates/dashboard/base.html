@@ -1,0 +1,174 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}Sen Analytics{% endblock %} - Dashboard</title>
+    
+    <!-- Bootstrap 5.3 -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Bootstrap Icons -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css">
+    <!-- AOS Animation CSS -->
+    <link href="https://unpkg.com/aos@2.3.1/dist/aos.css" rel="stylesheet">
+    
+    <!-- Custom CSS -->
+    <link rel="stylesheet" href="{% static 'css/style.css' %}">
+    
+    <!-- Chart.js -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.9.1/chart.min.js"></script>
+    <!-- PapaParse -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.4.1/papaparse.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@latest"></script>
+    
+    {% block extra_css %}{% endblock %}
+</head>
+<body>
+    <!-- Sidebar -->
+    <nav class="sidebar" id="sidebar">
+        <div class="sidebar-header">
+            <a href="#" class="logo">
+                <i class="bi bi-activity"></i>
+                <span>Sene_Analytics</span>
+            </a>
+        </div>
+        
+        <div class="nav-menu">
+            <div class="nav-item">
+                <a href="{% url 'dashboard:index' %}" class="nav-link {% if active_page == 'dashboard' %}active{% endif %}">
+                    <i class="bi bi-speedometer2"></i>
+                    <span>Vue d'ensemble</span>
+                </a>
+            </div>
+            <div class="nav-item">
+                <a href="{% url 'dashboard:agriculture' %}" class="nav-link {% if active_page == 'agriculture' %}active{% endif %}">
+                    <i class="bi bi-tree"></i>
+                    <span>Agriculture</span>
+                </a>
+            </div>
+            <div class="nav-item">
+                <a href="{% url 'dashboard:meteo' %}" class="nav-link {% if active_page == 'meteo' %}active{% endif %}">
+                    <i class="bi bi-cloud-sun"></i>
+                    <span>Météo</span>
+                </a>
+            </div>
+            <div class="nav-item">
+                <a href="{% url 'dashboard:correlations' %}" class="nav-link {% if active_page == 'correlations' %}active{% endif %}">
+                    <i class="bi bi-diagram-3"></i>
+                    <span>Corrélations</span>
+                </a>
+            </div>
+            <div class="nav-item">
+                <a href="{% url 'dashboard:previsions' %}" class="nav-link {% if active_page == 'previsions' %}active{% endif %}">
+                    <i class="bi bi-graph-up-arrow"></i>
+                    <span>Prévisions</span>
+                </a>
+            </div>
+            <div class="nav-item">
+                <a href="{% url 'dashboard:exports' %}" class="nav-link {% if active_page == 'exports' %}active{% endif %}">
+                    <i class="bi bi-download"></i>
+                    <span>Exports & Rapports</span>
+                </a>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Main Content -->
+    <main class="main-content">
+        <!-- Header -->
+        <header class="top-header">
+            <div class="header-content">
+                <button class="btn-header d-md-none" id="toggleSidebar">
+                    <i class="bi bi-list"></i>
+                </button>
+                
+                <div class="search-box">
+                    <i class="bi bi-search search-icon"></i>
+                    <input type="text" class="search-input" id="globalSearch" placeholder="Rechercher dans les données...">
+                </div>
+                
+                <div class="header-actions">
+                    <button class="btn-header" title="Notifications">
+                        <i class="bi bi-bell"></i>
+                    </button>
+                    <button class="btn-header" title="Paramètres">
+                        <i class="bi bi-gear"></i>
+                    </button>
+                    <button class="btn-header" title="Mode sombre" id="themeToggle">
+                        <i class="bi bi-moon"></i>
+                    </button>
+                    <a href="#" class="user-profile">
+                        <div class="user-avatar">
+                            {% if user.is_authenticated %}
+                                {{ user.first_name|first|upper }}
+                            {% else %}
+                                M
+                            {% endif %}
+                        </div>
+                        <span class="d-none d-md-inline">
+                            {% if user.is_authenticated %}
+                                {{ user.first_name|default:user.username }}
+                            {% else %}
+                                Utilisateur
+                            {% endif %}
+                        </span>
+                    </a>
+                </div>
+            </div>
+        </header>
+
+        <!-- Content Area -->
+        <div class="content-area">
+            <!-- Messages Django -->
+            {% if messages %}
+                {% for message in messages %}
+                    <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
+                        {{ message }}
+                        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                    </div>
+                {% endfor %}
+            {% endif %}
+
+            <!-- Page Header -->
+            <div class="page-header" data-aos="fade-up">
+                <h1 class="page-title">{% block page_title %}{{ page_title }}{% endblock %}</h1>
+                <p class="page-subtitle">{% block page_subtitle %}{% endblock %}</p>
+            </div>
+
+            <!-- Contenu principal -->
+            {% block content %}{% endblock %}
+        </div>
+    </main>
+
+    <!-- Input file caché pour upload CSV global -->
+    <input type="file" id="globalFileInput" accept=".csv" style="display: none;">
+
+    <!-- Bootstrap JS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <!-- AOS Animation JS -->
+    <script src="https://unpkg.com/aos@2.3.1/dist/aos.js"></script>
+    
+    <!-- Configuration Django -->
+    <script>
+        // Variables globales Django
+        window.DJANGO_CONFIG = {
+            csrfToken: '{{ csrf_token }}',
+            uploadUrl: "{% url 'dashboard:upload_csv' %}",
+            filterUrl: "{% url 'dashboard:filter_data' %}",
+            exportUrl: "{% url 'dashboard:export_csv' %}",
+            chartDataUrl: "{% url 'dashboard:get_chart_data' chart_type='CHART_TYPE' %}".replace('CHART_TYPE', '{chartType}'),
+            analyzeProductionUrl: "{% url 'dashboard:analyze_production' %}",
+            analyzeMeteoUrl: "{% url 'dashboard:analyze_meteo' %}",
+            analyzeCorrelationsUrl: "{% url 'dashboard:analyze_correlations' %}",
+            analyzePredictionsUrl: "{% url 'dashboard:analyze_predictions' %}"
+        };
+    </script>
+    
+    <!-- JavaScript principal -->
+    <script src="{% static 'js/main.js' %}"></script>
+    
+    <!-- JavaScript spécifique à la page -->
+    {% block extra_js %}{% endblock %}
+</body>
+</html>

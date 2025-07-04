@@ -1,0 +1,367 @@
+{% extends 'dashboard/base.html' %}
+{% load static %}
+
+{% block title %}Intelligence Météorologique{% endblock %}
+
+{% block page_subtitle %}
+Analyses climatiques et impacts sur les cultures
+{% endblock %}
+
+{% block content %}
+<!-- Métriques météo principales -->
+<div class="row mb-4" data-aos="fade-up" data-aos-delay="100">
+    <div class="col-lg-3 col-md-6 mb-4">
+        <div class="card-modern metric-card">
+            <div class="metric-icon" style="background: linear-gradient(135deg, #3b82f6, #1d4ed8);">
+                <i class="bi bi-cloud-rain"></i>
+            </div>
+            <div class="metric-value" id="precip-totale">--</div>
+            <div class="metric-label">Précipitations Moyennes</div>
+            <div class="metric-change" id="precip-tendance">
+                <i class="bi bi-dash"></i>
+                <span>Chargement...</span>
+            </div>
+        </div>
+    </div>
+    <div class="col-lg-3 col-md-6 mb-4">
+        <div class="card-modern metric-card">
+            <div class="metric-icon" style="background: linear-gradient(135deg, #f59e0b, #d97706);">
+                <i class="bi bi-sun"></i>
+            </div>
+            <div class="metric-value" id="ensoleillement">--</div>
+            <div class="metric-label">Ensoleillement</div>
+            <div class="metric-change" id="ensoleillement-tendance">
+                <i class="bi bi-dash"></i>
+                <span>Chargement...</span>
+            </div>
+        </div>
+    </div>
+    <div class="col-lg-3 col-md-6 mb-4">
+        <div class="card-modern metric-card">
+            <div class="metric-icon" style="background: linear-gradient(135deg, #10b981, #059669);">
+                <i class="bi bi-droplet"></i>
+            </div>
+            <div class="metric-value" id="humidite-sol">--</div>
+            <div class="metric-label">Humidité du Sol</div>
+            <div class="metric-change" id="humidite-tendance">
+                <i class="bi bi-dash"></i>
+                <span>Chargement...</span>
+            </div>
+        </div>
+    </div>
+    <div class="col-lg-3 col-md-6 mb-4">
+        <div class="card-modern metric-card">
+            <div class="metric-icon" style="background: linear-gradient(135deg, #8b5cf6, #7c3aed);">
+                <i class="bi bi-wind"></i>
+            </div>
+            <div class="metric-value" id="vitesse-vent">--</div>
+            <div class="metric-label">Vitesse du Vent</div>
+            <div class="metric-change" id="vent-tendance">
+                <i class="bi bi-dash"></i>
+                <span>Chargement...</span>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Alertes météo -->
+<div class="row mb-4" data-aos="fade-up" data-aos-delay="150">
+    <div class="col-12">
+        <div class="card-modern p-4">
+            <h3 class="mb-3">
+                <i class="bi bi-exclamation-triangle-fill me-2 text-warning"></i>
+                Alertes et Conditions Actuelles
+            </h3>
+            <div id="alertes-meteo">
+                <div class="alert alert-info">
+                    <i class="bi bi-info-circle me-2"></i>
+                    Chargez des données pour voir les alertes météorologiques
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Graphiques météo principaux -->
+<div class="row mb-4" data-aos="fade-up" data-aos-delay="200">
+    <div class="col-lg-8 mb-4">
+        <div class="chart-container">
+            <div class="chart-header">
+                <h3 class="chart-title">
+                    <i class="bi bi-cloud-sun me-2"></i>
+                    Analyse Climatique Saisonnière
+                </h3>
+                <div class="btn-group btn-group-sm" role="group">
+                    <button type="button" class="btn btn-outline-secondary active" onclick="changerVueClimat('temperature')">
+                        Température
+                    </button>
+                    <button type="button" class="btn btn-outline-secondary" onclick="changerVueClimat('precipitation')">
+                        Précipitations
+                    </button>
+                    <button type="button" class="btn btn-outline-secondary" onclick="changerVueClimat('combine')">
+                        Combiné
+                    </button>
+                </div>
+            </div>
+            <div class="chart-canvas-container">
+                <canvas id="chart-climat" class="chart-canvas"></canvas>
+            </div>
+        </div>
+    </div>
+    <div class="col-lg-4 mb-4">
+        <div class="chart-container">
+            <div class="chart-header">
+                <h3 class="chart-title">
+                    <i class="bi bi-thermometer me-2"></i>
+                    Distribution Température
+                </h3>
+            </div>
+            <div class="chart-canvas-container">
+                <canvas id="chart-temperature" class="chart-canvas"></canvas>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Analyse détaillée par zone -->
+<div class="row mb-4" data-aos="fade-up" data-aos-delay="300">
+    <div class="col-12">
+        <div class="card-modern p-4">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <h3>
+                    <i class="bi bi-geo-alt-fill me-2"></i>
+                    Conditions Météorologiques par Zone
+                </h3>
+                <div>
+                    <select class="form-select form-select-sm" id="select-zone-meteo" onchange="updateZoneMeteo()">
+                        <option value="">Toutes les zones</option>
+                    </select>
+                </div>
+            </div>
+            
+            <div class="row" id="zone-meteo-details">
+                <div class="col-md-6 mb-3">
+                    <div class="chart-canvas-container" style="height: 300px;">
+                        <canvas id="chart-zone-temperature"></canvas>
+                    </div>
+                </div>
+                <div class="col-md-6 mb-3">
+                    <div class="chart-canvas-container" style="height: 300px;">
+                        <canvas id="chart-zone-precipitation"></canvas>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Historique et tendances -->
+<div class="row mb-4" data-aos="fade-up" data-aos-delay="400">
+    <div class="col-lg-6 mb-4">
+        <div class="chart-container">
+            <div class="chart-header">
+                <h3 class="chart-title">
+                    <i class="bi bi-calendar-week me-2"></i>
+                    Évolution Mensuelle
+                </h3>
+                <select class="form-select form-select-sm" style="width: auto;" onchange="updateEvolutionMensuelle(this.value)">
+                    <option value="2023">2023</option>
+                    <option value="2022">2022</option>
+                    <option value="2021">2021</option>
+                </select>
+            </div>
+            <div class="chart-canvas-container">
+                <canvas id="chart-evolution-mensuelle" class="chart-canvas"></canvas>
+            </div>
+        </div>
+    </div>
+    <div class="col-lg-6 mb-4">
+        <div class="chart-container">
+            <div class="chart-header">
+                <h3 class="chart-title">
+                    <i class="bi bi-water me-2"></i>
+                    Bilan Hydrique
+                </h3>
+            </div>
+            <div class="chart-canvas-container">
+                <canvas id="chart-bilan-hydrique" class="chart-canvas"></canvas>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Tableau des anomalies climatiques -->
+<div class="table-modern mb-4" data-aos="fade-up" data-aos-delay="500">
+    <div class="table-header">
+        <h3 class="table-title">
+            <i class="bi bi-table me-2"></i>
+            Anomalies Climatiques Détectées
+        </h3>
+        <button class="btn-export" onclick="exporterAnomalies()">
+            <i class="bi bi-download me-2"></i>Exporter
+        </button>
+    </div>
+    <div class="table-responsive">
+        <table class="table" id="table-anomalies">
+            <thead>
+                <tr>
+                    <th>Date</th>
+                    <th>Zone</th>
+                    <th>Type d'anomalie</th>
+                    <th>Valeur observée</th>
+                    <th>Valeur normale</th>
+                    <th>Écart</th>
+                    <th>Sévérité</th>
+                    <th>Impact potentiel</th>
+                </tr>
+            </thead>
+            <tbody id="anomalies-tbody">
+                <tr>
+                    <td colspan="8" class="text-center py-4">
+                        <div class="text-muted">
+                            <i class="bi bi-cloud-slash me-2"></i>
+                            Aucune donnée météorologique chargée
+                        </div>
+                    </td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<!-- Prévisions et recommandations -->
+<div class="row" data-aos="fade-up" data-aos-delay="600">
+    <div class="col-lg-4 mb-4">
+        <div class="card-modern p-4">
+            <h4 class="mb-3">
+                <i class="bi bi-calendar-plus me-2"></i>
+                Prévisions Court Terme
+            </h4>
+            <div id="previsions-court-terme">
+                <div class="mb-3">
+                    <h6 class="text-muted">7 prochains jours</h6>
+                    <div class="d-flex justify-content-between align-items-center mb-2">
+                        <span><i class="bi bi-thermometer me-2"></i>Température</span>
+                        <span class="badge bg-warning">28-35°C</span>
+                    </div>
+                    <div class="d-flex justify-content-between align-items-center mb-2">
+                        <span><i class="bi bi-cloud-rain me-2"></i>Précipitations</span>
+                        <span class="badge bg-info">15-25mm</span>
+                    </div>
+                    <div class="d-flex justify-content-between align-items-center">
+                        <span><i class="bi bi-wind me-2"></i>Vent</span>
+                        <span class="badge bg-secondary">10-15 km/h</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-lg-4 mb-4">
+        <div class="card-modern p-4">
+            <h4 class="mb-3">
+                <i class="bi bi-shield-check me-2 text-success"></i>
+                Recommandations Agricoles
+            </h4>
+            <div id="recommandations-meteo">
+                <ul class="list-unstyled">
+                    <li class="mb-2">
+                        <i class="bi bi-check-circle text-success me-2"></i>
+                        Conditions favorables pour les semis
+                    </li>
+                    <li class="mb-2">
+                        <i class="bi bi-droplet text-info me-2"></i>
+                        Prévoir irrigation complémentaire
+                    </li>
+                    <li class="mb-2">
+                        <i class="bi bi-sun text-warning me-2"></i>
+                        Protection contre forte chaleur
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </div>
+    <div class="col-lg-4 mb-4">
+        <div class="card-modern p-4">
+            <h4 class="mb-3">
+                <i class="bi bi-graph-up-arrow me-2 text-primary"></i>
+                Tendances Saisonnières
+            </h4>
+            <div id="tendances-saison">
+                <canvas id="mini-chart-tendances" height="200"></canvas>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Section d'analyse avancée -->
+<div class="row mt-4" data-aos="fade-up" data-aos-delay="700">
+    <div class="col-12">
+        <div class="card-modern p-4">
+            <h3 class="mb-4">
+                <i class="bi bi-cpu me-2"></i>
+                Analyse Avancée et Modélisation
+            </h3>
+            
+            <div class="row">
+                <div class="col-md-6 mb-4">
+                    <h5>Indices Climatiques</h5>
+                    <div class="progress mb-3">
+                        <div class="progress-bar bg-danger" role="progressbar" style="width: 75%" id="indice-secheresse">
+                            Indice de sécheresse: 75%
+                        </div>
+                    </div>
+                    <div class="progress mb-3">
+                        <div class="progress-bar bg-success" role="progressbar" style="width: 60%" id="indice-humidite">
+                            Indice d'humidité: 60%
+                        </div>
+                    </div>
+                    <div class="progress mb-3">
+                        <div class="progress-bar bg-warning" role="progressbar" style="width: 45%" id="indice-stress">
+                            Stress hydrique: 45%
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-6 mb-4">
+                    <h5>Corrélations Météo-Production</h5>
+                    <div class="chart-canvas-container" style="height: 250px;">
+                        <canvas id="chart-correlation-meteo"></canvas>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal pour les détails -->
+<div class="modal fade" id="detailsModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="detailsModalLabel">Détails de l'analyse</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body" id="modal-content">
+                <!-- Contenu dynamique -->
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Fermer</button>
+                <button type="button" class="btn btn-primary" onclick="exporterDetails()">
+                    <i class="bi bi-download me-2"></i>Exporter
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Bouton flottant pour configuration -->
+<button class="btn btn-secondary position-fixed bottom-0 end-0 m-4 rounded-circle shadow" 
+        style="width: 60px; height: 60px; z-index: 99; margin-bottom: 80px !important;" 
+        onclick="ouvrirConfiguration()"
+        title="Configuration des alertes">
+    <i class="bi bi-gear fs-4"></i>
+</button>
+{% endblock %}
+
+{% block extra_js %}
+<script src="{% static 'js/meteo.js' %}"></script>
+{% endblock %}

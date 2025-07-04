@@ -1,0 +1,673 @@
+/* 
+ * TCHIA Analytics - Styles spécifiques Dashboard Enhanced
+ * Nouveaux éléments IA et visualisations avancées
+ */
+
+/* Indicateur IA */
+.ai-indicator {
+    background: linear-gradient(135deg, #1e3a8a 0%, #3b82f6 100%);
+    color: white;
+    padding: 1rem 2rem;
+    border-radius: 20px;
+    margin-bottom: 2rem;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    box-shadow: 0 10px 30px rgba(30, 58, 138, 0.3);
+    position: relative;
+    overflow: hidden;
+}
+
+.ai-indicator::before {
+    content: '';
+    position: absolute;
+    top: -50%;
+    right: -10%;
+    width: 300px;
+    height: 300px;
+    background: radial-gradient(circle, rgba(255, 255, 255, 0.1) 0%, transparent 70%);
+    animation: pulse-ai 3s ease-in-out infinite;
+}
+
+@keyframes pulse-ai {
+    0%, 100% { transform: scale(1); opacity: 0.5; }
+    50% { transform: scale(1.1); opacity: 0.8; }
+}
+
+.ai-badge {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    font-weight: 600;
+    font-size: 1.1rem;
+    z-index: 2;
+}
+
+.ai-badge i {
+    font-size: 1.5rem;
+}
+
+.ai-status-dot {
+    width: 10px;
+    height: 10px;
+    background: #4ade80;
+    border-radius: 50%;
+    animation: blink 2s infinite;
+}
+
+@keyframes blink {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.3; }
+}
+
+.ai-info {
+    font-size: 0.95rem;
+    opacity: 0.9;
+    z-index: 2;
+}
+
+/* Section analyse IA */
+.ai-analysis-section {
+    position: relative;
+}
+
+.card-header-ai {
+    background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%);
+    padding: 1.5rem 2rem;
+    border-bottom: 2px solid #e2e8f0;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border-radius: 20px 20px 0 0;
+}
+
+.ai-title {
+    font-size: 1.3rem;
+    font-weight: 600;
+    color: var(--text-primary);
+    margin: 0;
+    display: flex;
+    align-items: center;
+}
+
+.ai-title i {
+    color: var(--primary-blue);
+}
+
+/* Animation de traitement IA */
+.ai-processing {
+    display: none;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.ai-dot {
+    width: 8px;
+    height: 8px;
+    background: var(--primary-blue);
+    border-radius: 50%;
+    animation: ai-wave 1.4s linear infinite;
+}
+
+.ai-dot:nth-child(2) {
+    animation-delay: -0.2s;
+}
+
+.ai-dot:nth-child(3) {
+    animation-delay: -0.4s;
+}
+
+@keyframes ai-wave {
+    0%, 60%, 100% {
+        transform: scale(1);
+        opacity: 1;
+    }
+    30% {
+        transform: scale(1.5);
+        opacity: 0.5;
+    }
+}
+
+/* Contenu IA */
+.ai-content {
+    padding: 2rem;
+    min-height: 200px;
+}
+
+.ai-loading {
+    text-align: center;
+    padding: 3rem;
+}
+
+.ai-loading-icon {
+    font-size: 3rem;
+    color: var(--primary-blue);
+    animation: rotate-ai 2s linear infinite;
+}
+
+@keyframes rotate-ai {
+    from { transform: rotate(0deg); }
+    to { transform: rotate(360deg); }
+}
+
+/* Cartes de risque */
+.risk-card {
+    background: white;
+    border-radius: 16px;
+    padding: 1.5rem;
+    text-align: center;
+    box-shadow: var(--shadow-soft);
+    transition: all 0.3s ease;
+    border: 2px solid transparent;
+}
+
+.risk-card:hover {
+    transform: translateY(-5px);
+    box-shadow: var(--shadow-medium);
+}
+
+.risk-card.risk-low {
+    border-color: var(--accent-green);
+}
+
+.risk-card.risk-medium {
+    border-color: var(--warm-gold);
+}
+
+.risk-card.risk-high {
+    border-color: #dc2626;
+}
+
+.risk-icon {
+    width: 60px;
+    height: 60px;
+    margin: 0 auto 1rem;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.5rem;
+    background: #f8fafc;
+}
+
+.risk-low .risk-icon {
+    color: var(--accent-green);
+    background: rgba(74, 124, 89, 0.1);
+}
+
+.risk-medium .risk-icon {
+    color: var(--warm-gold);
+    background: rgba(217, 119, 6, 0.1);
+}
+
+.risk-high .risk-icon {
+    color: #dc2626;
+    background: rgba(220, 38, 38, 0.1);
+}
+
+.risk-score {
+    font-size: 2rem;
+    font-weight: 700;
+    margin-bottom: 0.5rem;
+}
+
+.risk-label {
+    font-weight: 600;
+    color: var(--text-secondary);
+    text-transform: uppercase;
+    font-size: 0.85rem;
+    letter-spacing: 0.5px;
+}
+
+.risk-bar {
+    height: 8px;
+    background: #f1f5f9;
+    border-radius: 4px;
+    margin-top: 1rem;
+    overflow: hidden;
+}
+
+.risk-bar-fill {
+    height: 100%;
+    border-radius: 4px;
+    transition: width 1s ease-out;
+}
+
+.risk-low .risk-bar-fill {
+    background: var(--gradient-primary);
+}
+
+.risk-medium .risk-bar-fill {
+    background: var(--gradient-gold);
+}
+
+.risk-high .risk-bar-fill {
+    background: linear-gradient(135deg, #dc2626, #f97316);
+}
+
+/* Résumé des risques */
+.risk-summary {
+    background: #f8fafc;
+    padding: 1.5rem;
+    border-radius: 12px;
+    text-align: center;
+}
+
+.risk-summary h5 {
+    margin-bottom: 0.5rem;
+}
+
+.risk-summary span {
+    font-size: 1.5rem;
+    font-weight: 700;
+}
+
+/* Indicateurs de risque */
+.risk-indicators {
+    background: white;
+    border-radius: 20px;
+    padding: 2rem;
+    box-shadow: var(--shadow-soft);
+}
+
+.indicator-card {
+    background: white;
+    border-radius: 12px;
+    padding: 1.5rem;
+    text-align: center;
+    border: 2px solid;
+    transition: all 0.3s ease;
+}
+
+.indicator-card.success {
+    border-color: var(--accent-green);
+    background: rgba(74, 124, 89, 0.05);
+}
+
+.indicator-card.warning {
+    border-color: var(--warm-gold);
+    background: rgba(217, 119, 6, 0.05);
+}
+
+.indicator-card.danger {
+    border-color: #dc2626;
+    background: rgba(220, 38, 38, 0.05);
+}
+
+.indicator-card i {
+    font-size: 2rem;
+    margin-bottom: 0.5rem;
+}
+
+.indicator-card h6 {
+    font-size: 0.9rem;
+    font-weight: 600;
+    margin-bottom: 0.5rem;
+    color: var(--text-secondary);
+}
+
+.indicator-value {
+    font-size: 1.2rem;
+    font-weight: 700;
+}
+
+/* Métriques avec tendances */
+.metric-trend {
+    margin-top: 0.5rem;
+    height: 30px;
+}
+
+.metric-change {
+    transition: all 0.3s ease;
+}
+
+.loading-dots {
+    font-size: 0.85rem;
+    color: var(--text-secondary);
+    font-style: italic;
+}
+
+/* Tableau amélioré */
+.risk-indicator {
+    display: inline-block;
+    padding: 0.3rem 0.8rem;
+    border-radius: 20px;
+    font-size: 0.85rem;
+    font-weight: 600;
+}
+
+.trend-indicator {
+    display: flex;
+    align-items: center;
+    gap: 0.3rem;
+    font-weight: 600;
+}
+
+.trend-indicator.positive {
+    color: var(--accent-green);
+}
+
+.trend-indicator.negative {
+    color: #dc2626;
+}
+
+.trend-indicator.neutral {
+    color: var(--text-secondary);
+}
+
+.ai-score {
+    display: inline-block;
+    padding: 0.4rem 1rem;
+    border-radius: 20px;
+    font-weight: 700;
+    font-size: 0.9rem;
+}
+
+.score-excellent {
+    background: linear-gradient(135deg, #059669, #10b981);
+    color: white;
+}
+
+.score-good {
+    background: linear-gradient(135deg, #2d5016, #4a7c59);
+    color: white;
+}
+
+.score-medium {
+    background: linear-gradient(135deg, #d97706, #fbbf24);
+    color: white;
+}
+
+.score-low {
+    background: linear-gradient(135deg, #dc2626, #f97316);
+    color: white;
+}
+
+/* Carte de prédiction */
+.prediction-card {
+    background: white;
+    border-radius: 20px;
+    box-shadow: var(--shadow-soft);
+    overflow: hidden;
+}
+
+.prediction-content {
+    padding: 2rem;
+}
+
+.prediction-controls {
+    background: #f8fafc;
+    padding: 1.5rem;
+    border-radius: 16px;
+    height: 100%;
+}
+
+.prediction-controls h5 {
+    margin-bottom: 1.5rem;
+    font-size: 1.1rem;
+}
+
+.simulation-param {
+    margin-bottom: 1.5rem;
+}
+
+.simulation-param label {
+    display: block;
+    font-weight: 600;
+    margin-bottom: 0.5rem;
+    color: var(--text-secondary);
+    font-size: 0.9rem;
+}
+
+.form-range {
+    width: 100%;
+    margin-bottom: 0.5rem;
+}
+
+.simulation-param span {
+    display: inline-block;
+    background: var(--primary-blue);
+    color: white;
+    padding: 0.2rem 0.6rem;
+    border-radius: 20px;
+    font-size: 0.85rem;
+    font-weight: 600;
+}
+
+.simulation-results {
+    background: white;
+    padding: 1rem;
+    border-radius: 12px;
+    border: 2px solid #e2e8f0;
+}
+
+.simulation-result-item {
+    padding: 0.75rem;
+    border-bottom: 1px solid #f1f5f9;
+    font-size: 0.9rem;
+}
+
+.simulation-result-item:last-child {
+    border-bottom: none;
+}
+
+/* Bouton IA */
+.btn-ai {
+    background: linear-gradient(135deg, #1e3a8a, #3b82f6);
+    color: white;
+    border: none;
+    padding: 0.5rem 1.5rem;
+    border-radius: 25px;
+    font-weight: 600;
+    transition: all 0.3s ease;
+    box-shadow: 0 4px 15px rgba(59, 130, 246, 0.3);
+}
+
+.btn-ai:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(59, 130, 246, 0.4);
+    background: linear-gradient(135deg, #1e40af, #2563eb);
+    color: white;
+}
+
+/* Recommandations IA */
+.ai-recommendations {
+    background: white;
+    border-radius: 20px;
+    padding: 2rem;
+    box-shadow: var(--shadow-soft);
+}
+
+.recommendation-card {
+    background: #f8fafc;
+    border-radius: 16px;
+    padding: 1.5rem;
+    margin-bottom: 1.5rem;
+    border-left: 4px solid;
+    transition: all 0.3s ease;
+}
+
+.recommendation-card:hover {
+    transform: translateX(5px);
+    box-shadow: var(--shadow-medium);
+}
+
+.recommendation-card.urgent {
+    border-left-color: #dc2626;
+    background: rgba(220, 38, 38, 0.05);
+}
+
+.recommendation-card.important {
+    border-left-color: #d97706;
+    background: rgba(217, 119, 6, 0.05);
+}
+
+.recommendation-card.strategique {
+    border-left-color: #1e3a8a;
+    background: rgba(30, 58, 138, 0.05);
+}
+
+.recommendation-card.innovation {
+    border-left-color: #7c3aed;
+    background: rgba(124, 58, 237, 0.05);
+}
+
+.recommendation-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 1rem;
+}
+
+.recommendation-category {
+    font-size: 0.85rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    color: var(--text-secondary);
+}
+
+.recommendation-priority {
+    padding: 0.3rem 0.8rem;
+    border-radius: 20px;
+    font-size: 0.8rem;
+    font-weight: 600;
+    background: var(--gradient-primary);
+    color: white;
+}
+
+.recommendation-title {
+    font-size: 1.1rem;
+    font-weight: 700;
+    margin-bottom: 1rem;
+    color: var(--text-primary);
+}
+
+.recommendation-actions {
+    margin-bottom: 1rem;
+}
+
+.recommendation-actions h6 {
+    font-size: 0.9rem;
+    font-weight: 600;
+    margin-bottom: 0.5rem;
+    color: var(--text-secondary);
+}
+
+.recommendation-actions ul {
+    list-style: none;
+    padding-left: 0;
+}
+
+.recommendation-actions li {
+    padding: 0.5rem 0;
+    padding-left: 1.5rem;
+    position: relative;
+}
+
+.recommendation-actions li::before {
+    content: '→';
+    position: absolute;
+    left: 0;
+    color: var(--primary-green);
+    font-weight: 700;
+}
+
+.recommendation-meta {
+    display: flex;
+    gap: 1.5rem;
+    padding-top: 1rem;
+    border-top: 1px solid #e2e8f0;
+}
+
+.meta-item {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-size: 0.85rem;
+    color: var(--text-secondary);
+}
+
+.meta-item i {
+    color: var(--primary-blue);
+}
+
+/* Loading IA pour recommandations */
+.ai-recommendation-loading {
+    text-align: center;
+    padding: 3rem;
+    color: var(--text-secondary);
+}
+
+.ai-recommendation-loading p {
+    margin-top: 1rem;
+}
+
+/* Actions du tableau */
+.table-actions {
+    display: flex;
+    gap: 1rem;
+    align-items: center;
+}
+
+.btn-action {
+    background: transparent;
+    border: 2px solid white;
+    color: white;
+    width: 35px;
+    height: 35px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.3s ease;
+}
+
+.btn-action:hover {
+    background: white;
+    color: var(--primary-green);
+}
+
+/* Animations supplémentaires */
+.fade-in-up {
+    animation: fadeInUp 0.6s ease-out;
+}
+
+@keyframes fadeInUp {
+    from {
+        opacity: 0;
+        transform: translateY(20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+    .ai-indicator {
+        flex-direction: column;
+        text-align: center;
+        gap: 1rem;
+    }
+    
+    .risk-card {
+        margin-bottom: 1rem;
+    }
+    
+    .prediction-controls {
+        margin-top: 2rem;
+    }
+    
+    .recommendation-meta {
+        flex-direction: column;
+        gap: 0.5rem;
+    }
+    
+    .card-header-ai {
+        flex-direction: column;
+        gap: 1rem;
+        text-align: center;
+    }
+}

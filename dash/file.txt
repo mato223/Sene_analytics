@@ -1,0 +1,438 @@
+@csrf_exempt
+def analyze_risk_ai(request):
+    """Analyse des risques avec IA"""
+    try:
+        session_id = request.session.session_key
+        if not session_id or session_id not in DATA_CACHE:
+            return JsonResponse({'error': 'Aucune donnée chargée'}, status=400)
+        
+        df = DATA_CACHE[session_id].copy()
+        
+        # Appliquer les filtres si présents
+        filters = json.loads(request.body) if request.body else {}
+        
+        # Calculer les métriques de risque par zone
+        risk_analysis = {}
+        zones = df['zones'].unique()
+        
+        for zone in zones:
+            zone_data = df[df['zones'] == zone]
+            
+            # Calculs des métriques
+            production = zone_data['production'].sum()
+            superficie = zone_data['superficie'].sum()
+            rendement = production / superficie if superficie > 0 else 0
+            
+            # Taux de croissance
+            years = sorted(zone_data['annee'].unique())
+            growth_rate = 0
+            if len(years) >= 2:
+                recent_prod = zone_data[zone_data['annee'] == years[-1]]['production'].sum()
+                previous_prod = zone_data[zone_data['annee'] == years[-2]]['production'].sum()
+                growth_rate = ((recent_prod - previous_prod) / previous_prod * 100) if previous_prod > 0 else 0
+            
+            # Stress hydrique
+            precip_mean = zone_data['precipitation_sum_saison'].mean()
+            precip_normal = 600  # Valeur de référence
+            water_stress = ((precip_normal - precip_mean) / precip_normal * 100) if precip_normal > 0 else 0
+            
+            # Impact température
+            temp_mean = zone_data['temperature_2m_mean_saison'].mean()
+            temp_optimal = 25
+            temp_impact = abs(temp_mean - temp_optimal) * 10
+            
+            # Score de risque
+            risk_score = min(100, max(0, 
+                (max(0, min(30, water_stress)) +
+                 max(0, min(30, temp_impact)) +
+                 (20 if growth_rate < -10 else 0) +
+                 (20 if rendement < 3 else 0))
+            ))
+            
+            # Niveau de risque
+            risk_level = (
+                'critical' if risk_score > 70 else
+                'high' if risk_score > 50 else
+                'medium' if risk_score > 30 else
+                'low'
+            )
+            
+            # Recommandations IA
+            recommendations = []
+            
+            if water_stress > 40:
+                recommendations.append({
+                    'type': 'urgent',
+                    'action': 'Irrigation d\'urgence requise',
+                    'impact': 'Prévient perte de 30% rendement',
+                    'confidence': 0.85
+                })
+            
+            if temp_impact > 40:
+                recommendations.append({
+                    'type': 'important', 
+                    'action': 'Protection thermique des cultures',
+                    'impact': 'Réduit stress thermique de 40%',
+                    'confidence': 0.78
+                })
+            
+            # Suite de views.py - Fonction analyze_risk_ai
+
+            if growth_rate < -20:
+                recommendations.append({
+                    'type': 'critical',
+                    'action': 'Intervention agronomique immédiate',
+                    'impact': 'Stabilise la production',
+                    'confidence': 0.92
+                })
+            
+            risk_analysis[zone] = {
+                'production': float(production),
+                'superficie': float(superficie),
+                'rendement': float(rendement),
+                'growth_rate': float(growth_rate),
+                'water_stress': float(water_stress),
+                'temp_impact': float(temp_impact),
+                'precip_mean': float(precip_mean),
+                'temp_mean': float(temp_mean),
+                'risk_score': float(risk_score),
+                'risk_level': risk_level,
+                'recommendations': recommendations,
+                'confidence': 0.85 + (np.random.random() * 0.15)  # Simulation confiance IA
+            }
+        
+        # Analyse globale
+        global_metrics = {
+            'total_zones': len(zones),
+            'critical_zones': sum(1 for z in risk_analysis.values() if z['risk_level'] == 'critical'),
+            'high_risk_zones': sum(1 for z in risk_analysis.values() if z['risk_level'] == 'high'),
+            'average_risk_score': np.mean([z['risk_score'] for z in risk_analysis.values()]),
+            'total_production': df['production'].sum(),
+            'total_superficie': df['superficie'].sum(),
+            'average_rendement': df['production'].sum() / df['superficie'].sum() if df['superficie'].sum() > 0 else 0
+        }
+        
+        # Prédictions (simulation simple pour la démo)
+        predictions = generate_ai_predictions(df, risk_analysis)
+        
+        return JsonResponse({
+            'success': True,
+            'risk_analysis': risk_analysis,
+            'global_metrics': global_metrics,
+            'predictions': predictions,
+            'timestamp': datetime.now().isoformat()
+        })
+        
+    except Exception as e:
+        logger.error(f"Erreur analyse risques IA: {str(e)}")
+        return JsonResponse({'error': str(e)}, status=500)
+
+def generate_ai_predictions(df, risk_analysis):
+    """Générer des prédictions IA simulées"""
+    predictions = {
+        'next_season': {},
+        'alerts': [],
+        'opportunities': []
+    }
+    
+    # Prédictions par zone
+    for zone, analysis in risk_analysis.items():
+        # Simulation de prédiction basée sur les tendances
+        trend_factor = 1 + (analysis['growth_rate'] / 100)
+        weather_factor = 1 - (analysis['water_stress'] / 200)  # Impact négatif du stress
+        
+        predicted_production = analysis['production'] * trend_factor * weather_factor
+        predicted_rendement = analysis['rendement'] * weather_factor
+        
+        predictions['next_season'][zone] = {
+            'production': float(predicted_production),
+            'rendement': float(predicted_rendement),
+            'risk_evolution': 'increasing' if analysis['risk_score'] > 50 else 'stable',
+            'confidence': 0.75 + (np.random.random() * 0.2)
+        }
+        
+        # Alertes prédictives
+        if analysis['water_stress'] > 60:
+            predictions['alerts'].append({
+                'zone': zone,
+                'type': 'drought',
+                'severity': 'high',
+                'timeline': '2-3 mois',
+                'message': f'Risque de sécheresse sévère prévu pour {zone}',
+                'probability': 0.8
+            })
+        
+        # Opportunités
+        if analysis['rendement'] > 5 and analysis['risk_level'] == 'low':
+            predictions['opportunities'].append({
+                'zone': zone,
+                'type': 'expansion',
+                'potential': '+20% production',
+                'investment': 'Modéré',
+                'roi_estimated': '250%',
+                'confidence': 0.82
+            })
+    
+    return predictions
+
+@csrf_exempt
+def get_zone_history(request, zone_name):
+    """Obtenir l'historique détaillé d'une zone"""
+    try:
+        session_id = request.session.session_key
+        if not session_id or session_id not in DATA_CACHE:
+            return JsonResponse({'error': 'Aucune donnée chargée'}, status=400)
+        
+        df = DATA_CACHE[session_id]
+        zone_data = df[df['zones'] == zone_name]
+        
+        if zone_data.empty:
+            return JsonResponse({'error': f'Zone {zone_name} introuvable'}, status=404)
+        
+        # Historique par année
+        history = []
+        for year in sorted(zone_data['annee'].unique()):
+            year_data = zone_data[zone_data['annee'] == year]
+            
+            history.append({
+                'year': int(year),
+                'production': float(year_data['production'].sum()),
+                'superficie': float(year_data['superficie'].sum()),
+                'rendement': float(year_data['production'].sum() / year_data['superficie'].sum()) if year_data['superficie'].sum() > 0 else 0,
+                'temperature': float(year_data['temperature_2m_mean_saison'].mean()),
+                'precipitation': float(year_data['precipitation_sum_saison'].mean()),
+                'humidity': float(year_data['soil_moisture_saison'].mean()) if 'soil_moisture_saison' in year_data else None
+            })
+        
+        # Statistiques
+        stats = {
+            'average_production': float(zone_data['production'].mean()),
+            'max_production': float(zone_data['production'].max()),
+            'min_production': float(zone_data['production'].min()),
+            'std_production': float(zone_data['production'].std()),
+            'trend': calculate_trend(history)
+        }
+        
+        return JsonResponse({
+            'zone': zone_name,
+            'history': history,
+            'statistics': stats
+        })
+        
+    except Exception as e:
+        logger.error(f"Erreur historique zone: {str(e)}")
+        return JsonResponse({'error': str(e)}, status=500)
+
+def calculate_trend(history):
+    """Calculer la tendance d'une série temporelle"""
+    if len(history) < 2:
+        return 'insufficient_data'
+    
+    # Calcul simple de la tendance
+    productions = [h['production'] for h in history]
+    years = list(range(len(productions)))
+    
+    # Régression linéaire simple
+    n = len(years)
+    sum_x = sum(years)
+    sum_y = sum(productions)
+    sum_xy = sum(x * y for x, y in zip(years, productions))
+    sum_x2 = sum(x * x for x in years)
+    
+    if n * sum_x2 - sum_x * sum_x == 0:
+        return 'stable'
+    
+    slope = (n * sum_xy - sum_x * sum_y) / (n * sum_x2 - sum_x * sum_x)
+    
+    if slope > 0.1:
+        return 'increasing'
+    elif slope < -0.1:
+        return 'decreasing'
+    else:
+        return 'stable'
+
+@csrf_exempt
+def execute_ai_action(request):
+    """Exécuter une action recommandée par l'IA"""
+    try:
+        data = json.loads(request.body)
+        zone = data.get('zone')
+        action_type = data.get('action_type')
+        
+        # Simulation de l'exécution de l'action
+        result = {
+            'success': True,
+            'zone': zone,
+            'action_type': action_type,
+            'status': 'executed',
+            'timestamp': datetime.now().isoformat(),
+            'expected_impact': {
+                'production': '+15%',
+                'risk_reduction': '-25%',
+                'timeline': '3-6 mois'
+            },
+            'notifications_sent': ['SMS équipe terrain', 'Email responsable zone', 'Alerte système irrigation']
+        }
+        
+        # Log de l'action
+        logger.info(f"Action IA exécutée: {action_type} pour zone {zone}")
+        
+        return JsonResponse(result)
+        
+    except Exception as e:
+        logger.error(f"Erreur exécution action IA: {str(e)}")
+        return JsonResponse({'error': str(e)}, status=500)
+
+def get_weather_forecast(request):
+    """Obtenir les prévisions météo (simulation)"""
+    try:
+        # Simulation de prévisions météo pour les 7 prochains jours
+        forecast = []
+        base_temp = 25
+        base_precip = 5
+        
+        for i in range(7):
+            date = datetime.now() + timedelta(days=i)
+            forecast.append({
+                'date': date.strftime('%Y-%m-%d'),
+                'temperature_min': base_temp + np.random.uniform(-5, 5),
+                'temperature_max': base_temp + 10 + np.random.uniform(-5, 5),
+                'precipitation': max(0, base_precip + np.random.uniform(-5, 20)),
+                'humidity': 40 + np.random.uniform(-10, 30),
+                'wind_speed': 10 + np.random.uniform(-5, 15),
+                'conditions': np.random.choice(['Ensoleillé', 'Nuageux', 'Pluvieux', 'Orageux'])
+            })
+        
+        return JsonResponse({
+            'forecast': forecast,
+            'source': 'IA Weather Model',
+            'confidence': 0.85,
+            'last_update': datetime.now().isoformat()
+        })
+        
+    except Exception as e:
+        logger.error(f"Erreur prévisions météo: {str(e)}")
+        return JsonResponse({'error': str(e)}, status=500)
+
+def get_risk_matrix_data(request):
+    """Données pour la matrice de risques"""
+    try:
+        session_id = request.session.session_key
+        if not session_id or session_id not in DATA_CACHE:
+            return JsonResponse({'error': 'Aucune donnée chargée'}, status=400)
+        
+        df = DATA_CACHE[session_id]
+        
+        # Calculer la matrice probabilité/impact pour chaque zone
+        risk_matrix = []
+        
+        for zone in df['zones'].unique():
+            zone_data = df[df['zones'] == zone]
+            
+            # Probabilité basée sur les conditions météo
+            precip_deficit = max(0, 600 - zone_data['precipitation_sum_saison'].mean()) / 600
+            temp_stress = abs(zone_data['temperature_2m_mean_saison'].mean() - 25) / 25
+            probability = (precip_deficit + temp_stress) / 2 * 100
+            
+            # Impact basé sur la production et superficie
+            production = zone_data['production'].sum()
+            impact = (production / df['production'].sum()) * 100
+            
+            risk_matrix.append({
+                'zone': zone,
+                'probability': min(100, probability),
+                'impact': min(100, impact),
+                'production': float(production),
+                'risk_category': categorize_risk(probability, impact)
+            })
+        
+        return JsonResponse({
+            'risk_matrix': risk_matrix,
+            'categories': {
+                'low': {'color': '#10b981', 'threshold': 30},
+                'medium': {'color': '#f59e0b', 'threshold': 60},
+                'high': {'color': '#ef4444', 'threshold': 80},
+                'critical': {'color': '#7c3aed', 'threshold': 100}
+            }
+        })
+        
+    except Exception as e:
+        logger.error(f"Erreur matrice de risques: {str(e)}")
+        return JsonResponse({'error': str(e)}, status=500)
+
+def categorize_risk(probability, impact):
+    """Catégoriser le niveau de risque"""
+    score = (probability * impact) / 100
+    
+    if score > 60:
+        return 'critical'
+    elif score > 40:
+        return 'high'
+    elif score > 20:
+        return 'medium'
+    else:
+        return 'low'
+
+def generate_emergency_plan(request):
+    """Générer un plan d'urgence basé sur l'analyse IA"""
+    try:
+        data = json.loads(request.body) if request.body else {}
+        zones = data.get('zones', [])
+        
+        plan = {
+            'id': f'PLAN-{datetime.now().strftime("%Y%m%d%H%M%S")}',
+            'created_at': datetime.now().isoformat(),
+            'priority': 'CRITICAL',
+            'zones_affected': zones,
+            'immediate_actions': [
+                {
+                    'action': 'Activer les systèmes d\'irrigation d\'urgence',
+                    'responsible': 'Équipe Irrigation',
+                    'deadline': '24 heures',
+                    'resources': ['Pompes mobiles', 'Personnel supplémentaire']
+                },
+                {
+                    'action': 'Déployer les équipes de protection des cultures',
+                    'responsible': 'Équipe Agronomique',
+                    'deadline': '48 heures',
+                    'resources': ['Bâches de protection', 'Produits phytosanitaires']
+                }
+            ],
+            'medium_term_actions': [
+                {
+                    'action': 'Installer des systèmes d\'irrigation goutte-à-goutte',
+                    'responsible': 'Service Technique',
+                    'timeline': '2 semaines',
+                    'budget_estimated': '50000 EUR'
+                },
+                {
+                    'action': 'Formation des agriculteurs aux techniques de conservation d\'eau',
+                    'responsible': 'Service Formation',
+                    'timeline': '1 mois',
+                    'participants': 200
+                }
+            ],
+            'monitoring': {
+                'frequency': 'Quotidien',
+                'metrics': ['Niveau d\'humidité du sol', 'État des cultures', 'Consommation d\'eau'],
+                'reporting': 'Tableau de bord temps réel'
+            },
+            'estimated_impact': {
+                'production_saved': '35%',
+                'cost': '75000 EUR',
+                'roi': '320%'
+            }
+        }
+        
+        return JsonResponse({
+            'emergency_plan': plan,
+            'notifications_sent': True,
+            'teams_alerted': ['Irrigation', 'Agronomique', 'Direction']
+        })
+        
+    except Exception as e:
+        logger.error(f"Erreur génération plan urgence: {str(e)}")
+        return JsonResponse({'error': str(e)}, status=500)
+
+# Ajouter aussi l'import nécessaire en haut du fichier
+from datetime import datetime, timedelta

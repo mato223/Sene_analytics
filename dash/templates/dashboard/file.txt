@@ -1,0 +1,255 @@
+{% extends 'dashboard/base.html' %}
+{% load static %}
+
+{% block title %}Vue d'ensemble{% endblock %}
+
+{% block page_subtitle %}
+Analyse intégrée des données agricoles et météorologiques - Office du Niger (2018-2023)
+{% endblock %}
+
+{% block content %}
+<!-- Filtres -->
+<div class="filters-section" data-aos="fade-up" data-aos-delay="100">
+    <div class="row">
+        <div class="col-md-2">
+            <div class="filter-group">
+                <label class="filter-label">Année</label>
+                <select class="form-select" id="filter-annee">
+                    <option value="">Toutes les années</option>
+                </select>
+            </div>
+        </div>
+        <div class="col-md-2">
+            <div class="filter-group">
+                <label class="filter-label">Saison</label>
+                <select class="form-select" id="filter-saison">
+                    <option value="">Toutes les saisons</option>
+                    <option value="hivernage">Hivernage</option>
+                    <option value="contre_saison">Contre-saison</option>
+                </select>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="filter-group">
+                <label class="filter-label">Zone</label>
+                <select class="form-select" id="filter-zone">
+                    <option value="">Toutes les zones</option>
+                </select>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="filter-group">
+                <label class="filter-label">Type de culture</label>
+                <select class="form-select" id="filter-type">
+                    <option value="">Tous les types</option>
+                    <option value="casiers">Casiers</option>
+                    <option value="hors_casiers">Hors casiers</option>
+                </select>
+            </div>
+        </div>
+        <div class="col-md-2">
+            <div class="filter-group">
+                <label class="filter-label">&nbsp;</label>
+                <button class="btn btn-primary-custom w-100" onclick="appliquerFiltres()">
+                    <span class="loading-spinner d-none" id="loading-filters"></span>
+                    <i class="bi bi-funnel me-2"></i>Actualiser
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Métriques principales -->
+<div class="row mb-4" data-aos="fade-up" data-aos-delay="200">
+    <div class="col-lg-3 col-md-6 mb-4">
+        <div class="card-modern metric-card">
+            <div class="metric-icon" style="background: var(--gradient-primary);">
+                <i class="bi bi-clipboard-data"></i>
+            </div>
+            <div class="metric-value" id="total-production">--</div>
+            <div class="metric-label">Production Totale</div>
+            <div class="metric-change change-positive">
+                <i class="bi bi-arrow-up"></i>
+                <span id="change-production">+12.5% vs année précédente</span>
+            </div>
+        </div>
+    </div>
+    <div class="col-lg-3 col-md-6 mb-4">
+        <div class="card-modern metric-card">
+            <div class="metric-icon" style="background: var(--gradient-secondary);">
+                <i class="bi bi-geo-alt"></i>
+            </div>
+            <div class="metric-value" id="total-superficie">--</div>
+            <div class="metric-label">Superficie Cultivée</div>
+            <div class="metric-change change-positive">
+                <i class="bi bi-arrow-up"></i>
+                <span id="change-superficie">+8.3% vs année précédente</span>
+            </div>
+        </div>
+    </div>
+    <div class="col-lg-3 col-md-6 mb-4">
+        <div class="card-modern metric-card">
+            <div class="metric-icon" style="background: var(--gradient-gold);">
+                <i class="bi bi-speedometer"></i>
+            </div>
+            <div class="metric-value" id="rendement-moyen">--</div>
+            <div class="metric-label">Rendement Moyen</div>
+            <div class="metric-change change-positive">
+                <i class="bi bi-arrow-up"></i>
+                <span id="change-rendement">+3.8% vs année précédente</span>
+            </div>
+        </div>
+    </div>
+    <div class="col-lg-3 col-md-6 mb-4">
+        <div class="card-modern metric-card">
+            <div class="metric-icon" style="background: linear-gradient(135deg, #dc2626, #f97316);">
+                <i class="bi bi-thermometer-half"></i>
+            </div>
+            <div class="metric-value" id="temperature-moyenne">--</div>
+            <div class="metric-label">Température Moyenne</div>
+            <div class="metric-change change-negative">
+                <i class="bi bi-arrow-up"></i>
+                <span id="change-temperature">+1.2°C vs moyenne historique</span>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Graphiques -->
+<div class="row mb-4" data-aos="fade-up" data-aos-delay="300">
+    <div class="col-lg-8 mb-4">
+        <div class="chart-container">
+            <div class="chart-header">
+                <h3 class="chart-title">
+                    <i class="bi bi-graph-up me-2"></i>
+                    Évolution Production vs Précipitations
+                </h3>
+                <div class="chart-actions">
+                    <button class="btn btn-sm btn-outline-secondary" onclick="exporterGraphique('evolution')">
+                        <i class="bi bi-download"></i>
+                    </button>
+                </div>
+            </div>
+            <div class="chart-canvas-container">
+                <canvas id="chart-evolution" class="chart-canvas"></canvas>
+            </div>
+        </div>
+    </div>
+    <div class="col-lg-4 mb-4">
+        <div class="chart-container">
+            <div class="chart-header">
+                <h3 class="chart-title">
+                    <i class="bi bi-pie-chart me-2"></i>
+                    Répartition par Zone
+                </h3>
+                <div class="chart-actions">
+                    <button class="btn btn-sm btn-outline-secondary" onclick="exporterGraphique('zones')">
+                        <i class="bi bi-download"></i>
+                    </button>
+                </div>
+            </div>
+            <div class="chart-canvas-container">
+                <canvas id="chart-zones" class="chart-canvas"></canvas>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Tableau de performance -->
+<div class="table-modern" data-aos="fade-up" data-aos-delay="400">
+    <div class="table-header">
+        <h3 class="table-title">
+            <i class="bi bi-table me-2"></i>
+            Performance par Zone
+        </h3>
+        <button class="btn-export" onclick="exporterCSV()">
+            <i class="bi bi-download me-2"></i>
+            Exporter CSV
+        </button>
+    </div>
+    <div class="table-responsive">
+        <table class="table" id="performance-table">
+            <thead>
+                <tr>
+                    <th>Zone</th>
+                    <th>Production (t)</th>
+                    <th>Superficie (ha)</th>
+                    <th>Rendement (t/ha)</th>
+                    <th>Temp. Moy. (°C)</th>
+                    <th>Précip. (mm)</th>
+                    <th>Statut</th>
+                </tr>
+            </thead>
+            <tbody id="performance-tbody">
+                <!-- Zone de chargement initial -->
+                <tr id="upload-row">
+                    <td colspan="7" class="text-center py-5">
+                        <div class="upload-zone" onclick="document.getElementById('file-selector').click()">
+                            <i class="bi bi-cloud-upload upload-icon"></i>
+                            <h4>Charger vos données</h4>
+                            <p class="mb-3">Sélectionnez le fichier CSV pour commencer l'analyse</p>
+                            <button class="btn btn-primary-custom">
+                                <i class="bi bi-folder2-open me-2"></i>
+                                Choisir le fichier
+                            </button>
+                        </div>
+                        <input type="file" id="file-selector" accept=".csv" style="display: none;">
+                    </td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<!-- Graphiques supplémentaires -->
+<div class="row mt-4" data-aos="fade-up" data-aos-delay="500">
+    <div class="col-lg-6 mb-4">
+        <div class="chart-container">
+            <div class="chart-header">
+                <h3 class="chart-title">
+                    <i class="bi bi-bar-chart me-2"></i>
+                    Comparaison Annuelle
+                </h3>
+            </div>
+            <div class="chart-canvas-container">
+                <canvas id="chart-comparaison" class="chart-canvas"></canvas>
+            </div>
+        </div>
+    </div>
+    <div class="col-lg-6 mb-4">
+        <div class="chart-container">
+            <div class="chart-header">
+                <h3 class="chart-title">
+                    <i class="bi bi-graph-down me-2"></i>
+                    Tendances Climatiques
+                </h3>
+            </div>
+            <div class="chart-canvas-container">
+                <canvas id="chart-tendances" class="chart-canvas"></canvas>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Insights et recommandations -->
+<div class="row mt-4" data-aos="fade-up" data-aos-delay="600">
+    <div class="col-12">
+        <div class="card-modern p-4">
+            <h3 class="mb-3">
+                <i class="bi bi-lightbulb me-2"></i>
+                Insights & Recommandations
+            </h3>
+            <div id="insights-container">
+                <div class="alert alert-info">
+                    <i class="bi bi-info-circle me-2"></i>
+                    Chargez vos données pour obtenir des insights personnalisés
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="{% static 'js/dashboard.js' %}"></script>
+{% endblock %}

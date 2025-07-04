@@ -1,0 +1,416 @@
+{% extends 'dashboard/base.html' %}
+{% load static %}
+
+
+{% block extra_css %}
+    <link rel="stylesheet" href="{% static 'css/dashboard-risk.css' %}">
+{% endblock %}
+
+{% block title %}Vue d'ensemble - Analyse IA{% endblock %}
+
+{% block page_subtitle %}
+Analyse intégrée des données agricoles avec Intelligence Artificielle - Office du Niger (2018-2023)
+{% endblock %}
+
+{% block content %}
+<!-- Indicateur IA -->
+<div class="ai-indicator" data-aos="fade-down">
+    <div class="ai-badge">
+        <i class="bi bi-cpu"></i>
+        <span>Conseil Active</span>
+        <div class="ai-status-dot"></div>
+    </div>
+    <div class="ai-info">
+        Conseil en gestion des risques agricoles analysant vos données en temps réel
+    </div>
+</div>
+
+<!-- Filtres -->
+<div class="filters-section" data-aos="fade-up" data-aos-delay="100">
+    <div class="row">
+        <div class="col-md-2">
+            <div class="filter-group">
+                <label class="filter-label">Année</label>
+                <select class="form-select" id="filter-annee">
+                    <option value="">Toutes les années</option>
+                </select>
+            </div>
+        </div>
+        <div class="col-md-2">
+            <div class="filter-group">
+                <label class="filter-label">Saison</label>
+                <select class="form-select" id="filter-saison">
+                    <option value="">Toutes les saisons</option>
+                    <option value="hivernage">Hivernage</option>
+                    <option value="contre_saison">Contre-saison</option>
+                </select>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="filter-group">
+                <label class="filter-label">Zone</label>
+                <select class="form-select" id="filter-zone">
+                    <option value="">Toutes les zones</option>
+                </select>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="filter-group">
+                <label class="filter-label">Type de culture</label>
+                <select class="form-select" id="filter-type">
+                    <option value="">Tous les types</option>
+                    <option value="casiers">Casiers</option>
+                    <option value="hors_casiers">Hors casiers</option>
+                </select>
+            </div>
+        </div>
+        <div class="col-md-2">
+            <div class="filter-group">
+                <label class="filter-label">&nbsp;</label>
+                <button class="btn btn-primary-custom w-100" onclick="appliquerFiltres()">
+                    <span class="loading-spinner d-none" id="loading-filters"></span>
+                    <i class="bi bi-funnel me-2"></i>Actualiser
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Métriques principales dynamiques -->
+<div class="row mb-4" data-aos="fade-up" data-aos-delay="200">
+    <div class="col-lg-3 col-md-6 mb-4">
+        <div class="card-modern metric-card">
+            <div class="metric-icon" style="background: var(--gradient-primary);">
+                <i class="bi bi-clipboard-data"></i>
+            </div>
+            <div class="metric-value" id="total-production">--</div>
+            <div class="metric-label">Production Totale</div>
+            <div class="metric-change" id="production-change">
+                <span class="loading-dots">Calcul en cours...</span>
+            </div>
+            <div class="metric-trend" id="production-trend"></div>
+        </div>
+    </div>
+    <div class="col-lg-3 col-md-6 mb-4">
+        <div class="card-modern metric-card">
+            <div class="metric-icon" style="background: var(--gradient-secondary);">
+                <i class="bi bi-geo-alt"></i>
+            </div>
+            <div class="metric-value" id="total-superficie">--</div>
+            <div class="metric-label">Superficie Cultivée</div>
+            <div class="metric-change" id="superficie-change">
+                <span class="loading-dots">Calcul en cours...</span>
+            </div>
+            <div class="metric-trend" id="superficie-trend"></div>
+        </div>
+    </div>
+    <div class="col-lg-3 col-md-6 mb-4">
+        <div class="card-modern metric-card">
+            <div class="metric-icon" style="background: var(--gradient-gold);">
+                <i class="bi bi-speedometer"></i>
+            </div>
+            <div class="metric-value" id="rendement-moyen">--</div>
+            <div class="metric-label">Rendement Moyen</div>
+            <div class="metric-change" id="rendement-change">
+                <span class="loading-dots">Calcul en cours...</span>
+            </div>
+            <div class="metric-trend" id="rendement-trend"></div>
+        </div>
+    </div>
+    <div class="col-lg-3 col-md-6 mb-4">
+        <div class="card-modern metric-card">
+            <div class="metric-icon" style="background: linear-gradient(135deg, #dc2626, #f97316);">
+                <i class="bi bi-thermometer-half"></i>
+            </div>
+            <div class="metric-value" id="temperature-moyenne">--</div>
+            <div class="metric-label">Température Moyenne</div>
+            <div class="metric-change" id="temperature-change">
+                <span class="loading-dots">Calcul en cours...</span>
+            </div>
+            <div class="metric-trend" id="temperature-trend"></div>
+        </div>
+    </div>
+</div>
+
+<!-- Analyse IA en temps réel -->
+<div class="ai-analysis-section mb-4" data-aos="fade-up" data-aos-delay="250">
+    <div class="card-modern">
+        <div class="card-header-ai">
+            <h3 class="ai-title">
+                <i class="bi bi-brain me-2"></i>
+                Analyse IA des Risques Agricoles
+            </h3>
+            <div class="ai-processing" id="ai-processing">
+                <div class="ai-dot"></div>
+                <div class="ai-dot"></div>
+                <div class="ai-dot"></div>
+            </div>
+        </div>
+        <div class="ai-content" id="ai-analysis-content">
+            <div class="ai-loading">
+                <i class="bi bi-cpu ai-loading-icon"></i>
+                <p>L'IA analyse vos données...</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Graphiques principaux -->
+<div class="row mb-4" data-aos="fade-up" data-aos-delay="300">
+    <div class="col-lg-8 mb-4">
+        <div class="chart-container">
+            <div class="chart-header">
+                <h3 class="chart-title">
+                    <i class="bi bi-graph-up me-2"></i>
+                    Évolution Multi-Facteurs
+                </h3>
+                <div class="chart-actions">
+                    <button class="btn btn-sm btn-outline-secondary" onclick="changerTypeGraphique('evolution')">
+                        <i class="bi bi-arrow-repeat"></i>
+                    </button>
+                    <button class="btn btn-sm btn-outline-secondary" onclick="exporterGraphique('evolution')">
+                        <i class="bi bi-download"></i>
+                    </button>
+                </div>
+            </div>
+            <div class="chart-canvas-container">
+                <canvas id="chart-evolution" class="chart-canvas"></canvas>
+            </div>
+        </div>
+    </div>
+    <div class="col-lg-4 mb-4">
+        <div class="chart-container">
+            <div class="chart-header">
+                <h3 class="chart-title">
+                    <i class="bi bi-pie-chart me-2"></i>
+                    Performance par Zone
+                </h3>
+                <div class="chart-actions">
+                    <select class="form-select form-select-sm" id="zone-metric-select" onchange="mettreAJourGraphiqueZones()">
+                        <option value="production">Production</option>
+                        <option value="superficie">Superficie</option>
+                        <option value="rendement">Rendement</option>
+                    </select>
+                </div>
+            </div>
+            <div class="chart-canvas-container">
+                <canvas id="chart-zones" class="chart-canvas"></canvas>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Heatmap des corrélations -->
+<div class="row mb-4" data-aos="fade-up" data-aos-delay="350">
+    <div class="col-lg-6 mb-4">
+        <div class="chart-container">
+            <div class="chart-header">
+                <h3 class="chart-title">
+                    <i class="bi bi-grid-3x3 me-2"></i>
+                    Matrice de Corrélations
+                </h3>
+            </div>
+            <div class="chart-canvas-container">
+                <canvas id="chart-correlations" class="chart-canvas"></canvas>
+            </div>
+        </div>
+    </div>
+    <div class="col-lg-6 mb-4">
+        <div class="chart-container">
+            <div class="chart-header">
+                <h3 class="chart-title">
+                    <i class="bi bi-calendar-week me-2"></i>
+                    Heatmap Temporelle
+                </h3>
+            </div>
+            <div class="chart-canvas-container">
+                <canvas id="chart-heatmap" class="chart-canvas"></canvas>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Indicateurs de risques -->
+<div class="row mb-4" data-aos="fade-up" data-aos-delay="400">
+    <div class="col-12">
+        <div class="risk-indicators">
+            <h3 class="section-title mb-3">
+                <i class="bi bi-exclamation-triangle me-2"></i>
+                Indicateurs de Risques (Conseils)
+            </h3>
+            <div class="row" id="risk-indicators-container">
+                <!-- Généré dynamiquement -->
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Tableau de performance avancé -->
+<div class="table-modern" data-aos="fade-up" data-aos-delay="450">
+    <div class="table-header">
+        <h3 class="table-title">
+            <i class="bi bi-table me-2"></i>
+            Analyse Détaillée par Zone
+        </h3>
+        <div class="table-actions">
+            <button class="btn-action" onclick="toggleTableauAvance()">
+                <i class="bi bi-gear"></i>
+            </button>
+            <button class="btn-export" onclick="exporterCSV()">
+                <i class="bi bi-download me-2"></i>
+                Exporter CSV
+            </button>
+        </div>
+    </div>
+    <div class="table-responsive">
+        <table class="table" id="performance-table">
+            <thead>
+                <tr>
+                    <th>Zone</th>
+                    <th>Production (t)</th>
+                    <th>Superficie (ha)</th>
+                    <th>Rendement (t/ha)</th>
+                    <th>Temp. Moy. (°C)</th>
+                    <th>Précip. (mm)</th>
+                    <th>Indice de Risque</th>
+                    <th>Tendance</th>
+                    <th>Score IA</th>
+                </tr>
+            </thead>
+            <tbody id="performance-tbody">
+                <!-- Zone de chargement initial -->
+                <tr id="upload-row">
+                    <td colspan="9" class="text-center py-5">
+                        <div class="upload-zone" onclick="document.getElementById('file-selector').click()">
+                            <i class="bi bi-cloud-upload upload-icon"></i>
+                            <h4>Charger vos données</h4>
+                            <p class="mb-3">Sélectionnez le fichier CSV pour commencer l'analyse IA</p>
+                            <button class="btn btn-primary-custom">
+                                <i class="bi bi-folder2-open me-2"></i>
+                                Choisir le fichier
+                            </button>
+                        </div>
+                        <input type="file" id="file-selector" accept=".csv" style="display: none;">
+                    </td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<!-- Graphiques analytiques supplémentaires -->
+<div class="row mt-4" data-aos="fade-up" data-aos-delay="500">
+    <div class="col-lg-4 mb-4">
+        <div class="chart-container">
+            <div class="chart-header">
+                <h3 class="chart-title">
+                    <i class="bi bi-moisture me-2"></i>
+                    Analyse Hydrologique
+                </h3>
+            </div>
+            <div class="chart-canvas-container">
+                <canvas id="chart-hydro" class="chart-canvas"></canvas>
+            </div>
+        </div>
+    </div>
+    <div class="col-lg-4 mb-4">
+        <div class="chart-container">
+            <div class="chart-header">
+                <h3 class="chart-title">
+                    <i class="bi bi-graph-down me-2"></i>
+                    Efficience Agricole
+                </h3>
+            </div>
+            <div class="chart-canvas-container">
+                <canvas id="chart-efficience" class="chart-canvas"></canvas>
+            </div>
+        </div>
+    </div>
+    <div class="col-lg-4 mb-4">
+        <div class="chart-container">
+            <div class="chart-header">
+                <h3 class="chart-title">
+                    <i class="bi bi-bullseye me-2"></i>
+                    Objectifs vs Réalisations
+                </h3>
+            </div>
+            <div class="chart-canvas-container">
+                <canvas id="chart-objectifs" class="chart-canvas"></canvas>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Prédictions IA -->
+<div class="row mt-4" data-aos="fade-up" data-aos-delay="550">
+    <div class="col-12">
+        <div class="card-modern prediction-card">
+            <div class="card-header-ai">
+                <h3 class="ai-title">
+                    <i class="bi bi-graph-up-arrow me-2"></i>
+                    Prédictions & Simulations
+                </h3>
+                <button class="btn btn-sm btn-ai" onclick="lancerSimulation()">
+                    <i class="bi bi-play-circle me-1"></i>
+                    Lancer Simulation
+                </button>
+            </div>
+            <div class="prediction-content">
+                <div class="row">
+                    <div class="col-lg-8">
+                        <canvas id="chart-predictions" class="chart-canvas"></canvas>
+                    </div>
+                    <div class="col-lg-4">
+                        <div class="prediction-controls">
+                            <h5>Paramètres de Simulation</h5>
+                            <div class="simulation-param">
+                                <label>Variation Température (°C)</label>
+                                <input type="range" class="form-range" id="temp-variation" min="-5" max="5" value="0" step="0.5">
+                                <span id="temp-value">0°C</span>
+                            </div>
+                            <div class="simulation-param">
+                                <label>Variation Précipitations (%)</label>
+                                <input type="range" class="form-range" id="precip-variation" min="-50" max="50" value="0" step="5">
+                                <span id="precip-value">0%</span>
+                            </div>
+                            <div class="simulation-param">
+                                <label>Expansion Superficie (%)</label>
+                                <input type="range" class="form-range" id="superficie-variation" min="-20" max="50" value="0" step="5">
+                                <span id="superficie-value">0%</span>
+                            </div>
+                            <div class="simulation-results mt-3" id="simulation-results">
+                                <!-- Résultats de simulation -->
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Recommandations IA détaillées -->
+<div class="row mt-4" data-aos="fade-up" data-aos-delay="600">
+    <div class="col-12">
+        <div class="card-modern ai-recommendations">
+            <h3 class="mb-4">
+                <i class="bi bi-lightbulb me-2"></i>
+                Recommandations et Conseils en Gestion des Risques Agricoles
+            </h3>
+            <div id="ai-recommendations-container">
+                <div class="ai-recommendation-loading">
+                    <div class="spinner-border text-primary" role="status">
+                        <span class="visually-hidden">Analyse en cours...</span>
+                    </div>
+                    <p>Conseils personnalisés basés sur vos données...</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@latest"></script>
+<script src="{% static 'js/dashboard-risk.js' %}"></script>
+{% endblock %}

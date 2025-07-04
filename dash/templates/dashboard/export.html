@@ -1,0 +1,629 @@
+{% extends 'dashboard/base.html' %}
+{% load static %}
+
+{% block title %}Exports & Rapports{% endblock %}
+
+{% block page_subtitle %}
+Génération de rapports et export des données
+{% endblock %}
+
+{% block content %}
+<!-- Options d'export principales -->
+<div class="row mb-4" data-aos="fade-up" data-aos-delay="100">
+    <div class="col-lg-4 mb-4">
+        <div class="feature-card h-100">
+            <div class="feature-icon" style="background: var(--gradient-primary);">
+                <i class="bi bi-file-earmark-spreadsheet"></i>
+            </div>
+            <h3 class="feature-title">Export CSV</h3>
+            <p class="feature-description">Exportez les données filtrées au format CSV pour analyse externe</p>
+            
+            <!-- Options CSV -->
+            <div class="mt-3">
+                <div class="form-check mb-2">
+                    <input class="form-check-input" type="checkbox" id="csv-all-data" checked>
+                    <label class="form-check-label" for="csv-all-data">
+                        Toutes les données
+                    </label>
+                </div>
+                <div class="form-check mb-2">
+                    <input class="form-check-input" type="checkbox" id="csv-filtered">
+                    <label class="form-check-label" for="csv-filtered">
+                        Données filtrées uniquement
+                    </label>
+                </div>
+                <div class="form-check mb-3">
+                    <input class="form-check-input" type="checkbox" id="csv-statistics">
+                    <label class="form-check-label" for="csv-statistics">
+                        Inclure les statistiques
+                    </label>
+                </div>
+            </div>
+            
+            <button class="btn btn-primary-custom mt-3 w-100" onclick="exporterCSV()">
+                <i class="bi bi-download me-2"></i>Télécharger CSV
+            </button>
+        </div>
+    </div>
+    
+    <div class="col-lg-4 mb-4">
+        <div class="feature-card h-100">
+            <div class="feature-icon" style="background: var(--gradient-secondary);">
+                <i class="bi bi-file-earmark-pdf"></i>
+            </div>
+            <h3 class="feature-title">Rapport PDF</h3>
+            <p class="feature-description">Générez un rapport complet avec graphiques et analyses</p>
+            
+            <!-- Options PDF -->
+            <div class="mt-3">
+                <div class="form-group mb-2">
+                    <label class="form-label small">Type de rapport</label>
+                    <select class="form-select form-select-sm" id="pdf-type">
+                        <option value="complet">Rapport complet</option>
+                        <option value="executif">Résumé exécutif</option>
+                        <option value="technique">Rapport technique</option>
+                    </select>
+                </div>
+                <div class="form-check mb-2">
+                    <input class="form-check-input" type="checkbox" id="pdf-graphs" checked>
+                    <label class="form-check-label" for="pdf-graphs">
+                        Inclure les graphiques
+                    </label>
+                </div>
+                <div class="form-check mb-3">
+                    <input class="form-check-input" type="checkbox" id="pdf-recommandations" checked>
+                    <label class="form-check-label" for="pdf-recommandations">
+                        Inclure les recommandations
+                    </label>
+                </div>
+            </div>
+            
+            <button class="btn btn-primary-custom mt-3 w-100" onclick="genererRapportPDF()">
+                <i class="bi bi-file-pdf me-2"></i>Générer PDF
+            </button>
+        </div>
+    </div>
+    
+    <div class="col-lg-4 mb-4">
+        <div class="feature-card h-100">
+            <div class="feature-icon" style="background: var(--gradient-gold);">
+                <i class="bi bi-file-earmark-excel"></i>
+            </div>
+            <h3 class="feature-title">Export Excel</h3>
+            <p class="feature-description">Classeur Excel avec plusieurs feuilles d'analyse</p>
+            
+            <!-- Options Excel -->
+            <div class="mt-3">
+                <div class="form-check mb-2">
+                    <input class="form-check-input" type="checkbox" id="excel-donnees" checked>
+                    <label class="form-check-label" for="excel-donnees">
+                        Feuille de données
+                    </label>
+                </div>
+                <div class="form-check mb-2">
+                    <input class="form-check-input" type="checkbox" id="excel-stats" checked>
+                    <label class="form-check-label" for="excel-stats">
+                        Feuille statistiques
+                    </label>
+                </div>
+                <div class="form-check mb-2">
+                    <input class="form-check-input" type="checkbox" id="excel-pivots" checked>
+                    <label class="form-check-label" for="excel-pivots">
+                        Tableaux croisés dynamiques
+                    </label>
+                </div>
+                <div class="form-check mb-3">
+                    <input class="form-check-input" type="checkbox" id="excel-charts">
+                    <label class="form-check-label" for="excel-charts">
+                        Graphiques intégrés
+                    </label>
+                </div>
+            </div>
+            
+            <button class="btn btn-primary-custom mt-3 w-100" onclick="exporterExcel()">
+                <i class="bi bi-file-excel me-2"></i>Télécharger Excel
+            </button>
+        </div>
+    </div>
+</div>
+
+<!-- Configuration avancée -->
+<div class="row mb-4" data-aos="fade-up" data-aos-delay="200">
+    <div class="col-12">
+        <div class="card-modern p-4">
+            <h3 class="mb-4">
+                <i class="bi bi-gear me-2"></i>
+                Configuration Avancée des Exports
+            </h3>
+            
+            <div class="row">
+                <!-- Sélection des données -->
+                <div class="col-md-6 mb-4">
+                    <h5 class="mb-3">Sélection des Données</h5>
+                    
+                    <div class="mb-3">
+                        <label class="form-label">Période</label>
+                        <div class="row g-2">
+                            <div class="col-6">
+                                <input type="date" class="form-control" id="export-date-debut" value="2018-01-01">
+                            </div>
+                            <div class="col-6">
+                                <input type="date" class="form-control" id="export-date-fin" value="2023-12-31">
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label class="form-label">Zones à inclure</label>
+                        <select class="form-select" id="export-zones" multiple style="height: 120px;">
+                            <option value="all" selected>Toutes les zones</option>
+                        </select>
+                        <small class="text-muted">Ctrl+clic pour sélection multiple</small>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label class="form-label">Variables à exporter</label>
+                        <div class="row">
+                            <div class="col-6">
+                                <div class="form-check">
+                                    <input class="form-check-input" type="checkbox" id="var-production" checked>
+                                    <label class="form-check-label" for="var-production">Production</label>
+                                </div>
+                                <div class="form-check">
+                                    <input class="form-check-input" type="checkbox" id="var-superficie" checked>
+                                    <label class="form-check-label" for="var-superficie">Superficie</label>
+                                </div>
+                                <div class="form-check">
+                                    <input class="form-check-input" type="checkbox" id="var-rendement" checked>
+                                    <label class="form-check-label" for="var-rendement">Rendement</label>
+                                </div>
+                            </div>
+                            <div class="col-6">
+                                <div class="form-check">
+                                    <input class="form-check-input" type="checkbox" id="var-temperature" checked>
+                                    <label class="form-check-label" for="var-temperature">Température</label>
+                                </div>
+                                <div class="form-check">
+                                    <input class="form-check-input" type="checkbox" id="var-precipitation" checked>
+                                    <label class="form-check-label" for="var-precipitation">Précipitations</label>
+                                </div>
+                                <div class="form-check">
+                                    <input class="form-check-input" type="checkbox" id="var-humidite">
+                                    <label class="form-check-label" for="var-humidite">Humidité</label>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Options de formatage -->
+                <div class="col-md-6 mb-4">
+                    <h5 class="mb-3">Options de Formatage</h5>
+                    
+                    <div class="mb-3">
+                        <label class="form-label">Format des nombres</label>
+                        <select class="form-select" id="export-format-nombres">
+                            <option value="standard">Standard (1234.56)</option>
+                            <option value="french">Français (1 234,56)</option>
+                            <option value="scientific">Scientifique (1.23E+3)</option>
+                        </select>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label class="form-label">Séparateur CSV</label>
+                        <select class="form-select" id="export-separateur">
+                            <option value=",">Virgule (,)</option>
+                            <option value=";">Point-virgule (;)</option>
+                            <option value="\t">Tabulation</option>
+                        </select>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label class="form-label">Encodage</label>
+                        <select class="form-select" id="export-encodage">
+                            <option value="utf-8">UTF-8</option>
+                            <option value="utf-8-sig">UTF-8 avec BOM</option>
+                            <option value="latin1">Latin-1</option>
+                        </select>
+                    </div>
+                    
+                    <div class="form-check mb-2">
+                        <input class="form-check-input" type="checkbox" id="export-headers" checked>
+                        <label class="form-check-label" for="export-headers">
+                            Inclure les en-têtes
+                        </label>
+                    </div>
+                    
+                    <div class="form-check">
+                        <input class="form-check-input" type="checkbox" id="export-metadata">
+                        <label class="form-check-label" for="export-metadata">
+                            Inclure les métadonnées
+                        </label>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Rapports prédéfinis -->
+<div class="row mb-4" data-aos="fade-up" data-aos-delay="300">
+    <div class="col-12">
+        <div class="card-modern p-4">
+            <h3 class="mb-4">
+                <i class="bi bi-collection me-2"></i>
+                Rapports Prédéfinis
+            </h3>
+            
+            <div class="row">
+                <div class="col-md-3 mb-3">
+                    <div class="card h-100 border-0 shadow-sm">
+                        <div class="card-body text-center">
+                            <i class="bi bi-calendar-month fs-1 text-primary mb-3"></i>
+                            <h5>Rapport Mensuel</h5>
+                            <p class="text-muted small">Synthèse des performances du mois dernier</p>
+                            <button class="btn btn-sm btn-outline-primary" onclick="genererRapportPredefini('mensuel')">
+                                Générer
+                            </button>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="col-md-3 mb-3">
+                    <div class="card h-100 border-0 shadow-sm">
+                        <div class="card-body text-center">
+                            <i class="bi bi-graph-up-arrow fs-1 text-success mb-3"></i>
+                            <h5>Bilan Saisonnier</h5>
+                            <p class="text-muted small">Analyse complète de la dernière saison</p>
+                            <button class="btn btn-sm btn-outline-success" onclick="genererRapportPredefini('saisonnier')">
+                                Générer
+                            </button>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="col-md-3 mb-3">
+                    <div class="card h-100 border-0 shadow-sm">
+                        <div class="card-body text-center">
+                            <i class="bi bi-clipboard-data fs-1 text-warning mb-3"></i>
+                            <h5>Rapport Annuel</h5>
+                            <p class="text-muted small">Vue d'ensemble de l'année écoulée</p>
+                            <button class="btn btn-sm btn-outline-warning" onclick="genererRapportPredefini('annuel')">
+                                Générer
+                            </button>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="col-md-3 mb-3">
+                    <div class="card h-100 border-0 shadow-sm">
+                        <div class="card-body text-center">
+                            <i class="bi bi-bar-chart-line fs-1 text-info mb-3"></i>
+                            <h5>Analyse Comparative</h5>
+                            <p class="text-muted small">Comparaison inter-zones et inter-années</p>
+                            <button class="btn btn-sm btn-outline-info" onclick="genererRapportPredefini('comparatif')">
+                                Générer
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Historique et planification -->
+<div class="row mb-4" data-aos="fade-up" data-aos-delay="400">
+    <!-- Historique des exports -->
+    <div class="col-lg-6 mb-4">
+        <div class="card-modern p-4">
+            <h4 class="mb-3">
+                <i class="bi bi-clock-history me-2"></i>
+                Historique des Exports
+            </h4>
+            
+            <div class="table-responsive">
+                <table class="table table-sm">
+                    <thead>
+                        <tr>
+                            <th>Date</th>
+                            <th>Type</th>
+                            <th>Taille</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody id="historique-exports">
+                        <tr>
+                            <td>24/06/2025 14:30</td>
+                            <td><i class="bi bi-file-pdf text-danger"></i> PDF</td>
+                            <td>2.4 MB</td>
+                            <td>
+                                <button class="btn btn-sm btn-link p-0" onclick="retelecharger('pdf_20250624_1430')">
+                                    <i class="bi bi-download"></i>
+                                </button>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td>23/06/2025 09:15</td>
+                            <td><i class="bi bi-file-excel text-success"></i> Excel</td>
+                            <td>1.8 MB</td>
+                            <td>
+                                <button class="btn btn-sm btn-link p-0" onclick="retelecharger('excel_20250623_0915')">
+                                    <i class="bi bi-download"></i>
+                                </button>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td>22/06/2025 16:45</td>
+                            <td><i class="bi bi-file-text text-primary"></i> CSV</td>
+                            <td>856 KB</td>
+                            <td>
+                                <button class="btn btn-sm btn-link p-0" onclick="retelecharger('csv_20250622_1645')">
+                                    <i class="bi bi-download"></i>
+                                </button>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+            
+            <div class="text-center mt-3">
+                <button class="btn btn-sm btn-outline-secondary" onclick="voirHistoriqueComplet()">
+                    Voir tout l'historique
+                </button>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Rapports planifiés -->
+    <div class="col-lg-6 mb-4">
+        <div class="card-modern p-4">
+            <h4 class="mb-3">
+                <i class="bi bi-calendar-check me-2"></i>
+                Rapports Planifiés
+            </h4>
+            
+            <div class="scheduled-reports">
+                <div class="scheduled-item mb-3 p-3 bg-light rounded">
+                    <div class="d-flex justify-content-between align-items-start">
+                        <div>
+                            <h6 class="mb-1">Rapport Hebdomadaire</h6>
+                            <p class="mb-0 small text-muted">
+                                <i class="bi bi-clock me-1"></i>Tous les lundis à 8h00
+                            </p>
+                            <p class="mb-0 small text-muted">
+                                <i class="bi bi-envelope me-1"></i>admin@tchia.ml
+                            </p>
+                        </div>
+                        <div class="form-check form-switch">
+                            <input class="form-check-input" type="checkbox" id="schedule1" checked>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="scheduled-item mb-3 p-3 bg-light rounded">
+                    <div class="d-flex justify-content-between align-items-start">
+                        <div>
+                            <h6 class="mb-1">Bilan Mensuel</h6>
+                            <p class="mb-0 small text-muted">
+                                <i class="bi bi-clock me-1"></i>1er de chaque mois à 9h00
+                            </p>
+                            <p class="mb-0 small text-muted">
+                                <i class="bi bi-envelope me-1"></i>direction@tchia.ml
+                            </p>
+                        </div>
+                        <div class="form-check form-switch">
+                            <input class="form-check-input" type="checkbox" id="schedule2" checked>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="text-center mt-3">
+                    <button class="btn btn-primary" onclick="ajouterRapportPlanifie()">
+                        <i class="bi bi-plus-circle me-2"></i>Nouveau rapport planifié
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Templates personnalisés -->
+<div class="row mb-4" data-aos="fade-up" data-aos-delay="500">
+    <div class="col-12">
+        <div class="card-modern p-4">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <h3>
+                    <i class="bi bi-file-earmark-code me-2"></i>
+                    Templates de Rapports Personnalisés
+                </h3>
+                <button class="btn btn-sm btn-primary" onclick="creerNouveauTemplate()">
+                    <i class="bi bi-plus me-2"></i>Créer template
+                </button>
+            </div>
+            
+            <div class="row">
+                <div class="col-md-4 mb-3">
+                    <div class="card template-card h-100">
+                        <div class="card-body">
+                            <div class="d-flex justify-content-between align-items-start mb-2">
+                                <h5 class="card-title">Rapport Performance Zones</h5>
+                                <div class="dropdown">
+                                    <button class="btn btn-sm btn-link" data-bs-toggle="dropdown">
+                                        <i class="bi bi-three-dots-vertical"></i>
+                                    </button>
+                                    <ul class="dropdown-menu">
+                                        <li><a class="dropdown-item" href="#" onclick="editerTemplate(1)">
+                                            <i class="bi bi-pencil me-2"></i>Éditer
+                                        </a></li>
+                                        <li><a class="dropdown-item" href="#" onclick="dupliquerTemplate(1)">
+                                            <i class="bi bi-copy me-2"></i>Dupliquer
+                                        </a></li>
+                                        <li><hr class="dropdown-divider"></li>
+                                        <li><a class="dropdown-item text-danger" href="#" onclick="supprimerTemplate(1)">
+                                            <i class="bi bi-trash me-2"></i>Supprimer
+                                        </a></li>
+                                    </ul>
+                                </div>
+                            </div>
+                            <p class="card-text small text-muted">
+                                Analyse détaillée des performances par zone avec graphiques et recommandations
+                            </p>
+                            <div class="template-meta small text-muted mb-3">
+                                <div><i class="bi bi-calendar me-1"></i>Créé le 15/06/2025</div>
+                                <div><i class="bi bi-clock me-1"></i>Dernière utilisation: 20/06/2025</div>
+                            </div>
+                            <button class="btn btn-sm btn-primary w-100" onclick="utiliserTemplate(1)">
+                                Utiliser ce template
+                            </button>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="col-md-4 mb-3">
+                    <div class="card template-card h-100">
+                        <div class="card-body">
+                            <div class="d-flex justify-content-between align-items-start mb-2">
+                                <h5 class="card-title">Analyse Météo Détaillée</h5>
+                                <div class="dropdown">
+                                    <button class="btn btn-sm btn-link" data-bs-toggle="dropdown">
+                                        <i class="bi bi-three-dots-vertical"></i>
+                                    </button>
+                                    <ul class="dropdown-menu">
+                                        <li><a class="dropdown-item" href="#" onclick="editerTemplate(2)">
+                                            <i class="bi bi-pencil me-2"></i>Éditer
+                                        </a></li>
+                                        <li><a class="dropdown-item" href="#" onclick="dupliquerTemplate(2)">
+                                            <i class="bi bi-copy me-2"></i>Dupliquer
+                                        </a></li>
+                                        <li><hr class="dropdown-divider"></li>
+                                        <li><a class="dropdown-item text-danger" href="#" onclick="supprimerTemplate(2)">
+                                            <i class="bi bi-trash me-2"></i>Supprimer
+                                        </a></li>
+                                    </ul>
+                                </div>
+                            </div>
+                            <p class="card-text small text-muted">
+                                Focus sur les données météorologiques et leur impact sur les cultures
+                            </p>
+                            <div class="template-meta small text-muted mb-3">
+                                <div><i class="bi bi-calendar me-1"></i>Créé le 10/06/2025</div>
+                                <div><i class="bi bi-clock me-1"></i>Dernière utilisation: 18/06/2025</div>
+                            </div>
+                            <button class="btn btn-sm btn-primary w-100" onclick="utiliserTemplate(2)">
+                                Utiliser ce template
+                            </button>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="col-md-4 mb-3">
+                    <div class="card template-card h-100 border-dashed">
+                        <div class="card-body d-flex flex-column justify-content-center align-items-center text-center">
+                            <i class="bi bi-plus-circle fs-1 text-muted mb-3"></i>
+                            <h5 class="card-title">Créer un nouveau template</h5>
+                            <p class="card-text small text-muted">
+                                Personnalisez vos rapports selon vos besoins spécifiques
+                            </p>
+                            <button class="btn btn-sm btn-outline-primary" onclick="creerNouveauTemplate()">
+                                Commencer
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Outils d'export avancés -->
+<div class="row" data-aos="fade-up" data-aos-delay="600">
+    <div class="col-lg-4 mb-4">
+        <div class="card-modern p-4 text-center">
+            <i class="bi bi-diagram-3 fs-1 text-primary mb-3"></i>
+            <h5>Export API</h5>
+            <p class="text-muted">Intégrez les données dans vos applications</p>
+            <button class="btn btn-outline-primary" onclick="afficherDocAPI()">
+                <i class="bi bi-code-slash me-2"></i>Documentation API
+            </button>
+        </div>
+    </div>
+    
+    <div class="col-lg-4 mb-4">
+        <div class="card-modern p-4 text-center">
+            <i class="bi bi-cloud-arrow-down fs-1 text-success mb-3"></i>
+            <h5>Synchronisation Cloud</h5>
+            <p class="text-muted">Sauvegardez automatiquement vos exports</p>
+            <button class="btn btn-outline-success" onclick="configurerSync()">
+                <i class="bi bi-gear me-2"></i>Configurer
+            </button>
+        </div>
+    </div>
+    
+    <div class="col-lg-4 mb-4">
+        <div class="card-modern p-4 text-center">
+            <i class="bi bi-envelope fs-1 text-warning mb-3"></i>
+            <h5>Envoi par Email</h5>
+            <p class="text-muted">Partagez les rapports directement par email</p>
+            <button class="btn btn-outline-warning" onclick="envoyerParEmail()">
+                <i class="bi bi-send me-2"></i>Envoyer
+            </button>
+        </div>
+    </div>
+</div>
+
+<!-- Modal de progression -->
+<div class="modal fade" id="progressModal" tabindex="-1" data-bs-backdrop="static" data-bs-keyboard="false">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Export en cours...</h5>
+            </div>
+            <div class="modal-body">
+                <div class="mb-3">
+                    <div class="progress" style="height: 25px;">
+                        <div class="progress-bar progress-bar-striped progress-bar-animated" 
+                             role="progressbar" 
+                             id="export-progress" 
+                             style="width: 0%">0%</div>
+                    </div>
+                </div>
+                <p class="mb-0 text-center" id="export-status">Préparation des données...</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Styles spécifiques -->
+<style>
+.template-card {
+    transition: all 0.3s ease;
+    height: 100%;
+}
+
+.template-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 10px 20px rgba(0,0,0,0.1);
+}
+
+.border-dashed {
+    border: 2px dashed #dee2e6 !important;
+}
+
+.template-meta {
+    opacity: 0.8;
+}
+
+.scheduled-item {
+    transition: all 0.3s ease;
+}
+
+.scheduled-item:hover {
+    background-color: rgba(45, 80, 22, 0.05) !important;
+}
+</style>
+{% endblock %}
+
+{% block extra_js %}
+<script src="{% static 'js/exports.js' %}"></script>
+{% endblock %}

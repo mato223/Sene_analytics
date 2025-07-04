@@ -1,0 +1,340 @@
+{% extends 'dashboard/base.html' %}
+{% load static %}
+
+{% block title %}Analyse Agricole{% endblock %}
+
+{% block page_subtitle %}
+Superficies, production et rendements par zone et saison
+{% endblock %}
+
+{% block content %}
+<!-- Features cards -->
+<div class="row mb-4" data-aos="fade-up" data-aos-delay="100">
+    <div class="col-lg-4 mb-4">
+        <div class="feature-card">
+            <div class="feature-icon" style="background: var(--gradient-primary);">
+                <i class="bi bi-bar-chart"></i>
+            </div>
+            <h3 class="feature-title">Analyse des Rendements</h3>
+            <p class="feature-description">Évolution des rendements par zone et identification des facteurs de performance</p>
+        </div>
+    </div>
+    <div class="col-lg-4 mb-4">
+        <div class="feature-card">
+            <div class="feature-icon" style="background: var(--gradient-secondary);">
+                <i class="bi bi-map"></i>
+            </div>
+            <h3 class="feature-title">Cartographie des Superficies</h3>
+            <p class="feature-description">Visualisation géographique des zones cultivées et de leur évolution</p>
+        </div>
+    </div>
+    <div class="col-lg-4 mb-4">
+        <div class="feature-card">
+            <div class="feature-icon" style="background: var(--gradient-gold);">
+                <i class="bi bi-trophy"></i>
+            </div>
+            <h3 class="feature-title">Benchmarking</h3>
+            <p class="feature-description">Comparaison des performances entre zones et identification des meilleures pratiques</p>
+        </div>
+    </div>
+</div>
+
+<!-- Filtres spécifiques agriculture -->
+<div class="filters-section" data-aos="fade-up" data-aos-delay="150">
+    <div class="row">
+        <div class="col-md-3">
+            <div class="filter-group">
+                <label class="filter-label">Période d'analyse</label>
+                <select class="form-select" id="filter-periode">
+                    <option value="all">Toute la période</option>
+                    <option value="3ans">3 dernières années</option>
+                    <option value="5ans">5 dernières années</option>
+                </select>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="filter-group">
+                <label class="filter-label">Type de données</label>
+                <select class="form-select" id="filter-donnees">
+                    <option value="production">Production</option>
+                    <option value="superficie">Superficie</option>
+                    <option value="rendement">Rendement</option>
+                </select>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="filter-group">
+                <label class="filter-label">Comparaison</label>
+                <select class="form-select" id="filter-comparaison">
+                    <option value="zones">Par zones</option>
+                    <option value="annees">Par années</option>
+                    <option value="saisons">Par saisons</option>
+                </select>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="filter-group">
+                <label class="filter-label">&nbsp;</label>
+                <button class="btn btn-primary-custom w-100" onclick="actualiserAnalyseAgricole()">
+                    <i class="bi bi-arrow-repeat me-2"></i>Actualiser
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Statistiques clés -->
+<div class="row mb-4" data-aos="fade-up" data-aos-delay="200">
+    <div class="col-lg-3 col-md-6 mb-4">
+        <div class="card-modern metric-card">
+            <div class="metric-icon" style="background: linear-gradient(135deg, #059669, #10b981);">
+                <i class="bi bi-graph-up-arrow"></i>
+            </div>
+            <div class="metric-value" id="croissance-production">--</div>
+            <div class="metric-label">Croissance Production</div>
+            <div class="metric-change change-positive">
+                <span>Moyenne sur 5 ans</span>
+            </div>
+        </div>
+    </div>
+    <div class="col-lg-3 col-md-6 mb-4">
+        <div class="card-modern metric-card">
+            <div class="metric-icon" style="background: linear-gradient(135deg, #3b82f6, #1d4ed8);">
+                <i class="bi bi-pin-map"></i>
+            </div>
+            <div class="metric-value" id="expansion-superficie">--</div>
+            <div class="metric-label">Expansion Superficie</div>
+            <div class="metric-change change-positive">
+                <span>Nouvelles terres cultivées</span>
+            </div>
+        </div>
+    </div>
+    <div class="col-lg-3 col-md-6 mb-4">
+        <div class="card-modern metric-card">
+            <div class="metric-icon" style="background: linear-gradient(135deg, #f59e0b, #d97706);">
+                <i class="bi bi-award"></i>
+            </div>
+            <div class="metric-value" id="meilleur-rendement">--</div>
+            <div class="metric-label">Meilleur Rendement</div>
+            <div class="metric-change">
+                <span id="zone-meilleur-rendement">--</span>
+            </div>
+        </div>
+    </div>
+    <div class="col-lg-3 col-md-6 mb-4">
+        <div class="card-modern metric-card">
+            <div class="metric-icon" style="background: linear-gradient(135deg, #8b5cf6, #7c3aed);">
+                <i class="bi bi-percent"></i>
+            </div>
+            <div class="metric-value" id="efficacite-globale">--</div>
+            <div class="metric-label">Efficacité Globale</div>
+            <div class="metric-change">
+                <span>Score de performance</span>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Graphiques principaux -->
+<div class="row mb-4" data-aos="fade-up" data-aos-delay="300">
+    <div class="col-lg-6 mb-4">
+        <div class="chart-container">
+            <div class="chart-header">
+                <h3 class="chart-title">
+                    <i class="bi bi-graph-up me-2"></i>
+                    Évolution des Superficies
+                </h3>
+                <div class="btn-group btn-group-sm" role="group">
+                    <button type="button" class="btn btn-outline-secondary active" 
+                         onclick="changerTypeGraphique('superficies', 'bar', event)"> <!-- Ajout de event -->
+                         <i class="bi bi-bar-chart"></i>
+                    </button>
+                    <button type="button" class="btn btn-outline-secondary" 
+                        onclick="changerTypeGraphique('superficies', 'line', event)"> <!-- Ajout de event -->
+                        <i class="bi bi-graph-up"></i>
+                    </button>
+                </div>
+            </div>
+            <div class="chart-canvas-container">
+                <canvas id="chart-superficies" class="chart-canvas"></canvas>
+            </div>
+        </div>
+    </div>
+    <div class="col-lg-6 mb-4">
+        <div class="chart-container">
+            <div class="chart-header">
+                <h3 class="chart-title">
+                    <i class="bi bi-bar-chart me-2"></i>
+                    Rendements par Zone
+                </h3>
+                <div class="btn-group btn-group-sm" role="group">
+                    <button type="button" class="btn btn-outline-secondary active" 
+                    onclick="changerTriRendements('zone', event)">
+                    Zone
+                </button>
+                <button type="button" class="btn btn-outline-secondary" 
+                    onclick="changerTriRendements('valeur', event)">
+                    Valeur
+                </button>
+                </div>
+            </div>
+            <div class="chart-canvas-container">
+                <canvas id="chart-rendements" class="chart-canvas"></canvas>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Analyse comparative -->
+<div class="row mb-4" data-aos="fade-up" data-aos-delay="400">
+    <div class="col-lg-12">
+        <div class="card-modern p-4">
+            <h3 class="mb-4">
+                <i class="bi bi-diagram-2 me-2"></i>
+                Analyse Comparative Détaillée
+            </h3>
+            
+            <!-- Tabs pour différentes vues -->
+            <ul class="nav nav-tabs mb-4" id="analyseTab" role="tablist">
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link active" id="evolution-tab" data-bs-toggle="tab" data-bs-target="#evolution-content" type="button">
+                        Évolution temporelle
+                    </button>
+                </li>
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link" id="distribution-tab" data-bs-toggle="tab" data-bs-target="#distribution-content" type="button">
+                        Distribution spatiale
+                    </button>
+                </li>
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link" id="saisonnalite-tab" data-bs-toggle="tab" data-bs-target="#saisonnalite-content" type="button">
+                        Saisonnalité
+                    </button>
+                </li>
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link" id="efficacite-tab" data-bs-toggle="tab" data-bs-target="#efficacite-content" type="button">
+                        Efficacité
+                    </button>
+                </li>
+            </ul>
+            
+            <div class="tab-content" id="analyseTabContent">
+                <div class="tab-pane fade show active" id="evolution-content" role="tabpanel">
+                    <div class="chart-canvas-container" style="height: 400px;">
+                        <canvas id="chart-evolution-temporelle"></canvas>
+                    </div>
+                </div>
+                <div class="tab-pane fade" id="distribution-content" role="tabpanel">
+                    <div class="chart-canvas-container" style="height: 400px;">
+                        <canvas id="chart-distribution-spatiale"></canvas>
+                    </div>
+                </div>
+                <div class="tab-pane fade" id="saisonnalite-content" role="tabpanel">
+                    <div class="chart-canvas-container" style="height: 400px;">
+                        <canvas id="chart-saisonnalite"></canvas>
+                    </div>
+                </div>
+                <div class="tab-pane fade" id="efficacite-content" role="tabpanel">
+                    <div class="chart-canvas-container" style="height: 400px;">
+                        <canvas id="chart-efficacite"></canvas>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Tableau détaillé des performances -->
+<div class="table-modern" data-aos="fade-up" data-aos-delay="500">
+    <div class="table-header">
+        <h3 class="table-title">
+            <i class="bi bi-table me-2"></i>
+            Détails par Zone et Saison
+        </h3>
+        <div>
+            <button class="btn btn-sm btn-outline-light me-2" onclick="trierTableau('zone')">
+                <i class="bi bi-sort-alpha-down"></i> Zone
+            </button>
+            <button class="btn btn-sm btn-outline-light me-2" onclick="trierTableau('production')">
+                <i class="bi bi-sort-numeric-down"></i> Production
+            </button>
+            <button class="btn-export" onclick="exporterTableauAgricole()">
+                <i class="bi bi-download me-2"></i>Exporter
+            </button>
+        </div>
+    </div>
+    <div class="table-responsive">
+        <table class="table" id="table-agriculture">
+            <thead>
+                <tr>
+                    <th>Zone</th>
+                    <th>Année</th>
+                    <th>Saison</th>
+                    <th>Superficie (ha)</th>
+                    <th>Production (t)</th>
+                    <th>Rendement (t/ha)</th>
+                    <th>Variation (%)</th>
+                    <th>Rang</th>
+                </tr>
+            </thead>
+            <tbody id="agriculture-tbody">
+                <tr>
+                    <td colspan="8" class="text-center py-4">
+                        <div class="text-muted">
+                            <i class="bi bi-database me-2"></i>
+                            Chargez des données pour afficher l'analyse agricole détaillée
+                        </div>
+                    </td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<!-- Recommandations et insights -->
+<div class="row mt-4" data-aos="fade-up" data-aos-delay="600">
+    <div class="col-lg-6 mb-4">
+        <div class="card-modern p-4">
+            <h4 class="mb-3">
+                <i class="bi bi-lightbulb-fill me-2 text-warning"></i>
+                Recommandations Agricoles
+            </h4>
+            <div id="recommandations-agricoles">
+                <div class="placeholder-glow">
+                    <p class="placeholder col-12"></p>
+                    <p class="placeholder col-8"></p>
+                    <p class="placeholder col-10"></p>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-lg-6 mb-4">
+        <div class="card-modern p-4">
+            <h4 class="mb-3">
+                <i class="bi bi-bullseye me-2 text-success"></i>
+                Opportunités d'Amélioration
+            </h4>
+            <div id="opportunites-amelioration">
+                <div class="placeholder-glow">
+                    <p class="placeholder col-12"></p>
+                    <p class="placeholder col-8"></p>
+                    <p class="placeholder col-10"></p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Bouton flottant pour upload de données -->
+<button class="btn btn-primary-custom position-fixed bottom-0 end-0 m-4 rounded-circle shadow-lg" 
+        style="width: 60px; height: 60px; z-index: 100;" 
+        onclick="document.getElementById('file-agriculture').click()"
+        title="Charger des données">
+    <i class="bi bi-plus-lg fs-4"></i>
+</button>
+<input type="file" id="file-agriculture" accept=".csv" style="display: none;">
+{% endblock %}
+
+{% block extra_js %}
+<script src="{% static 'js/agriculture.js' %}"></script>
+{% endblock %}

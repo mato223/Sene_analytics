@@ -1,0 +1,562 @@
+{% extends 'dashboard/base.html' %}
+{% load static %}
+
+{% block title %}Modèles Prédictifs IA{% endblock %}
+
+{% block page_subtitle %}
+Prévisions et recommandations basées sur l'intelligence artificielle
+{% endblock %}
+
+{% block content %}
+<!-- Métriques de performance des modèles -->
+<div class="row mb-4" data-aos="fade-up" data-aos-delay="100">
+    <div class="col-lg-3 col-md-6 mb-4">
+        <div class="card-modern metric-card">
+            <div class="metric-icon" style="background: linear-gradient(135deg, #10b981, #059669);">
+                <i class="bi bi-cpu"></i>
+            </div>
+            <div class="metric-value" id="precision-modele">--</div>
+            <div class="metric-label">Précision du Modèle</div>
+            <div class="metric-change change-positive">
+                <i class="bi bi-check-circle"></i>
+                <span>Haute fiabilité</span>
+            </div>
+        </div>
+    </div>
+    <div class="col-lg-3 col-md-6 mb-4">
+        <div class="card-modern metric-card">
+            <div class="metric-icon" style="background: linear-gradient(135deg, #3b82f6, #1d4ed8);">
+                <i class="bi bi-graph-up-arrow"></i>
+            </div>
+            <div class="metric-value" id="prevision-production">--</div>
+            <div class="metric-label">Production Prévue</div>
+            <div class="metric-change" id="variation-prevue">
+                <i class="bi bi-arrow-up"></i>
+                <span>+15% vs année précédente</span>
+            </div>
+        </div>
+    </div>
+    <div class="col-lg-3 col-md-6 mb-4">
+        <div class="card-modern metric-card">
+            <div class="metric-icon" style="background: linear-gradient(135deg, #f59e0b, #d97706);">
+                <i class="bi bi-calendar-check"></i>
+            </div>
+            <div class="metric-value" id="periode-optimale">--</div>
+            <div class="metric-label">Période Optimale Semis</div>
+            <div class="metric-change">
+                <i class="bi bi-info-circle"></i>
+                <span>Basé sur prévisions météo</span>
+            </div>
+        </div>
+    </div>
+    <div class="col-lg-3 col-md-6 mb-4">
+        <div class="card-modern metric-card">
+            <div class="metric-icon" style="background: linear-gradient(135deg, #8b5cf6, #7c3aed);">
+                <i class="bi bi-shield-check"></i>
+            </div>
+            <div class="metric-value" id="risque-global">--</div>
+            <div class="metric-label">Niveau de Risque</div>
+            <div class="metric-change" id="tendance-risque">
+                <i class="bi bi-shield-fill-check"></i>
+                <span>Risque maîtrisé</span>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Configuration des prévisions -->
+<div class="row mb-4" data-aos="fade-up" data-aos-delay="150">
+    <div class="col-12">
+        <div class="card-modern p-4">
+            <h3 class="mb-4">
+                <i class="bi bi-gear-fill me-2"></i>
+                Configuration des Prévisions
+            </h3>
+            <div class="row">
+                <div class="col-md-3">
+                    <div class="form-group">
+                        <label class="form-label">Horizon de prévision</label>
+                        <select class="form-select" id="horizon-prevision" onchange="updatePrevisions()">
+                            <option value="3">3 mois</option>
+                            <option value="6" selected>6 mois</option>
+                            <option value="12">12 mois</option>
+                            <option value="24">24 mois</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="form-group">
+                        <label class="form-label">Zone cible</label>
+                        <select class="form-select" id="zone-prevision" onchange="updatePrevisions()">
+                            <option value="">Toutes les zones</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="form-group">
+                        <label class="form-label">Type de culture</label>
+                        <select class="form-select" id="type-culture-prevision" onchange="updatePrevisions()">
+                            <option value="">Tous types</option>
+                            <option value="riz">Riz</option>
+                            <option value="mais">Maïs</option>
+                            <option value="autres">Autres</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="form-group">
+                        <label class="form-label">Scénario climatique</label>
+                        <select class="form-select" id="scenario-climat" onchange="updatePrevisions()">
+                            <option value="normal">Normal</option>
+                            <option value="sec">Sec (-20% précip.)</option>
+                            <option value="humide">Humide (+20% précip.)</option>
+                            <option value="chaud">Chaud (+2°C)</option>
+                        </select>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Graphiques de prévisions principaux -->
+<div class="row mb-4" data-aos="fade-up" data-aos-delay="200">
+    <div class="col-lg-8 mb-4">
+        <div class="chart-container" style="height: 500px;">
+            <div class="chart-header">
+                <h3 class="chart-title">
+                    <i class="bi bi-graph-up-arrow me-2"></i>
+                    Prévisions de Production
+                </h3>
+                <div class="btn-group btn-group-sm" role="group">
+                    <button type="button" class="btn btn-outline-secondary active" onclick="changerVuePrevision('production')">
+                        Production
+                    </button>
+                    <button type="button" class="btn btn-outline-secondary" onclick="changerVuePrevision('rendement')">
+                        Rendement
+                    </button>
+                    <button type="button" class="btn btn-outline-secondary" onclick="changerVuePrevision('superficie')">
+                        Superficie
+                    </button>
+                </div>
+            </div>
+            <div class="chart-canvas-container" style="height: 400px;">
+                <canvas id="chart-previsions" class="chart-canvas"></canvas>
+            </div>
+        </div>
+    </div>
+    <div class="col-lg-4 mb-4">
+        <div class="chart-container" style="height: 500px;">
+            <div class="chart-header">
+                <h3 class="chart-title">
+                    <i class="bi bi-bullseye me-2"></i>
+                    Probabilités de Scénarios
+                </h3>
+            </div>
+            <div class="chart-canvas-container" style="height: 400px;">
+                <canvas id="chart-scenarios" class="chart-canvas"></canvas>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Analyse des risques -->
+<div class="row mb-4" data-aos="fade-up" data-aos-delay="300">
+    <div class="col-12">
+        <div class="card-modern p-4">
+            <h3 class="mb-4">
+                <i class="bi bi-exclamation-triangle me-2"></i>
+                Analyse des Risques et Opportunités
+            </h3>
+            
+            <div class="row">
+                <!-- Matrice des risques -->
+                <div class="col-md-6 mb-4">
+                    <h5 class="mb-3">Matrice des Risques</h5>
+                    <div class="chart-canvas-container" style="height: 300px;">
+                        <canvas id="chart-risques"></canvas>
+                    </div>
+                </div>
+                
+                <!-- Indicateurs de risque -->
+                <div class="col-md-6 mb-4">
+                    <h5 class="mb-3">Indicateurs de Risque</h5>
+                    <div class="risk-indicators">
+                        <div class="risk-item mb-3">
+                            <div class="d-flex justify-content-between align-items-center mb-1">
+                                <span>Risque climatique</span>
+                                <span class="badge bg-warning" id="niveau-risque-climat">Moyen</span>
+                            </div>
+                            <div class="progress" style="height: 8px;">
+                                <div class="progress-bar bg-warning" role="progressbar" style="width: 60%" id="progress-risque-climat"></div>
+                            </div>
+                        </div>
+                        
+                        <div class="risk-item mb-3">
+                            <div class="d-flex justify-content-between align-items-center mb-1">
+                                <span>Risque de rendement</span>
+                                <span class="badge bg-success" id="niveau-risque-rendement">Faible</span>
+                            </div>
+                            <div class="progress" style="height: 8px;">
+                                <div class="progress-bar bg-success" role="progressbar" style="width: 30%" id="progress-risque-rendement"></div>
+                            </div>
+                        </div>
+                        
+                        <div class="risk-item mb-3">
+                            <div class="d-flex justify-content-between align-items-center mb-1">
+                                <span>Risque hydrique</span>
+                                <span class="badge bg-danger" id="niveau-risque-hydrique">Élevé</span>
+                            </div>
+                            <div class="progress" style="height: 8px;">
+                                <div class="progress-bar bg-danger" role="progressbar" style="width: 80%" id="progress-risque-hydrique"></div>
+                            </div>
+                        </div>
+                        
+                        <div class="risk-item">
+                            <div class="d-flex justify-content-between align-items-center mb-1">
+                                <span>Risque phytosanitaire</span>
+                                <span class="badge bg-info" id="niveau-risque-phyto">Modéré</span>
+                            </div>
+                            <div class="progress" style="height: 8px;">
+                                <div class="progress-bar bg-info" role="progressbar" style="width: 45%" id="progress-risque-phyto"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Recommandations par risque -->
+            <div class="row mt-4">
+                <div class="col-12">
+                    <h5 class="mb-3">Stratégies de Mitigation</h5>
+                    <div id="strategies-mitigation">
+                        <div class="alert alert-warning">
+                            <i class="bi bi-lightbulb me-2"></i>
+                            <strong>Risque hydrique élevé:</strong> Recommandation d'installation de systèmes d'irrigation goutte-à-goutte dans les zones critiques
+                        </div>
+                        <div class="alert alert-info">
+                            <i class="bi bi-shield-check me-2"></i>
+                            <strong>Protection climatique:</strong> Utilisation de variétés résistantes à la sécheresse pour la prochaine saison
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Recommandations IA détaillées -->
+<div class="row mb-4" data-aos="fade-up" data-aos-delay="400">
+    <div class="col-lg-6 mb-4">
+        <div class="card-modern p-4">
+            <h4 class="mb-3">
+                <i class="bi bi-robot me-2"></i>
+                Recommandations IA par Zone
+            </h4>
+            <div class="accordion" id="accordionRecommandations">
+                <div class="accordion-item">
+                    <h2 class="accordion-header">
+                        <button class="accordion-button" type="button" data-bs-toggle="collapse" data-bs-target="#collapseOne">
+                            <i class="bi bi-geo-alt me-2"></i>Zone Kemacina
+                        </button>
+                    </h2>
+                    <div id="collapseOne" class="accordion-collapse collapse show" data-bs-parent="#accordionRecommandations">
+                        <div class="accordion-body">
+                            <ul class="list-unstyled mb-0">
+                                <li class="mb-2"><i class="bi bi-check-circle text-success me-2"></i>Augmenter irrigation de 15% en juin</li>
+                                <li class="mb-2"><i class="bi bi-calendar-event text-primary me-2"></i>Période optimale de semis: 10-20 juin</li>
+                                <li class="mb-2"><i class="bi bi-droplet text-info me-2"></i>Prévoir drainage supplémentaire en août</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+                <div class="accordion-item">
+                    <h2 class="accordion-header">
+                        <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapseTwo">
+                            <i class="bi bi-geo-alt me-2"></i>Zone Niono
+                        </button>
+                    </h2>
+                    <div id="collapseTwo" class="accordion-collapse collapse" data-bs-parent="#accordionRecommandations">
+                        <div class="accordion-body">
+                            <ul class="list-unstyled mb-0">
+                                <li class="mb-2"><i class="bi bi-exclamation-triangle text-warning me-2"></i>Risque de stress hydrique détecté</li>
+                                <li class="mb-2"><i class="bi bi-shield text-danger me-2"></i>Protection contre chaleur excessive nécessaire</li>
+                                <li class="mb-2"><i class="bi bi-arrow-repeat text-success me-2"></i>Rotation des cultures recommandée</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+                <div class="accordion-item">
+                    <h2 class="accordion-header">
+                        <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapseThree">
+                            <i class="bi bi-geo-alt me-2"></i>Zone Bewani
+                        </button>
+                    </h2>
+                    <div id="collapseThree" class="accordion-collapse collapse" data-bs-parent="#accordionRecommandations">
+                        <div class="accordion-body">
+                            <ul class="list-unstyled mb-0">
+                                <li class="mb-2"><i class="bi bi-graph-up text-success me-2"></i>Potentiel d'augmentation de 20% du rendement</li>
+                                <li class="mb-2"><i class="bi bi-brightness-high text-warning me-2"></i>Optimiser l'exposition solaire</li>
+                                <li class="mb-2"><i class="bi bi-gear text-primary me-2"></i>Mécanisation partielle recommandée</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-lg-6 mb-4">
+        <div class="card-modern p-4">
+            <h4 class="mb-3">
+                <i class="bi bi-calendar-range me-2"></i>
+                Calendrier Agricole Optimisé
+            </h4>
+            <div class="calendar-preview">
+                <div class="month-block mb-3">
+                    <h6 class="text-primary">Juin 2024</h6>
+                    <div class="calendar-items">
+                        <div class="calendar-item p-2 mb-2 rounded bg-light">
+                            <small class="text-muted">1-10 juin</small>
+                            <div><i class="bi bi-water me-1"></i>Préparation des sols</div>
+                        </div>
+                        <div class="calendar-item p-2 mb-2 rounded bg-success bg-opacity-10">
+                            <small class="text-muted">10-20 juin</small>
+                            <div class="text-success"><i class="bi bi-seedling me-1"></i>Période optimale de semis</div>
+                        </div>
+                        <div class="calendar-item p-2 rounded bg-light">
+                            <small class="text-muted">20-30 juin</small>
+                            <div><i class="bi bi-droplet me-1"></i>Irrigation initiale</div>
+                        </div>
+                    </div>
+                </div>
+                <div class="text-center">
+                    <button class="btn btn-sm btn-primary" onclick="afficherCalendrierComplet()">
+                        <i class="bi bi-calendar3 me-2"></i>Voir calendrier complet
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Comparaison de modèles -->
+<div class="row mb-4" data-aos="fade-up" data-aos-delay="500">
+    <div class="col-12">
+        <div class="card-modern p-4">
+            <h3 class="mb-4">
+                <i class="bi bi-sliders me-2"></i>
+                Performance des Modèles de Prévision
+            </h3>
+            
+            <!-- Tabs pour différents modèles -->
+            <ul class="nav nav-tabs mb-4" id="modelesTab" role="tablist">
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link active" id="regression-tab" data-bs-toggle="tab" data-bs-target="#regression-model" type="button">
+                        Régression Linéaire
+                    </button>
+                </li>
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link" id="arima-tab" data-bs-toggle="tab" data-bs-target="#arima-model" type="button">
+                        ARIMA
+                    </button>
+                </li>
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link" id="neural-tab" data-bs-toggle="tab" data-bs-target="#neural-model" type="button">
+                        Réseau de Neurones
+                    </button>
+                </li>
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link" id="ensemble-tab" data-bs-toggle="tab" data-bs-target="#ensemble-model" type="button">
+                        Ensemble
+                    </button>
+                </li>
+            </ul>
+            
+            <div class="tab-content" id="modelesTabContent">
+                <div class="tab-pane fade show active" id="regression-model" role="tabpanel">
+                    <div class="row">
+                        <div class="col-md-8">
+                            <div class="chart-canvas-container" style="height: 300px;">
+                                <canvas id="chart-model-regression"></canvas>
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <h5>Métriques du Modèle</h5>
+                            <dl class="row">
+                                <dt class="col-6">Précision (R²):</dt>
+                                <dd class="col-6">0.82</dd>
+                                <dt class="col-6">RMSE:</dt>
+                                <dd class="col-6">125.4 t</dd>
+                                <dt class="col-6">MAE:</dt>
+                                <dd class="col-6">98.2 t</dd>
+                                <dt class="col-6">Temps calcul:</dt>
+                                <dd class="col-6">0.3s</dd>
+                            </dl>
+                            <div class="alert alert-info">
+                                <small><i class="bi bi-info-circle me-1"></i>Modèle simple et rapide, idéal pour les tendances générales</small>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="tab-pane fade" id="arima-model" role="tabpanel">
+                    <div class="row">
+                        <div class="col-md-8">
+                            <div class="chart-canvas-container" style="height: 300px;">
+                                <canvas id="chart-model-arima"></canvas>
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <h5>Métriques du Modèle</h5>
+                            <dl class="row">
+                                <dt class="col-6">Précision (R²):</dt>
+                                <dd class="col-6">0.87</dd>
+                                <dt class="col-6">RMSE:</dt>
+                                <dd class="col-6">102.1 t</dd>
+                                <dt class="col-6">MAE:</dt>
+                                <dd class="col-6">84.5 t</dd>
+                                <dt class="col-6">Temps calcul:</dt>
+                                <dd class="col-6">1.2s</dd>
+                            </dl>
+                            <div class="alert alert-success">
+                                <small><i class="bi bi-check-circle me-1"></i>Excellent pour les séries temporelles avec saisonnalité</small>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="tab-pane fade" id="neural-model" role="tabpanel">
+                    <div class="row">
+                        <div class="col-md-8">
+                            <div class="chart-canvas-container" style="height: 300px;">
+                                <canvas id="chart-model-neural"></canvas>
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <h5>Métriques du Modèle</h5>
+                            <dl class="row">
+                                <dt class="col-6">Précision (R²):</dt>
+                                <dd class="col-6">0.91</dd>
+                                <dt class="col-6">RMSE:</dt>
+                                <dd class="col-6">87.3 t</dd>
+                                <dt class="col-6">MAE:</dt>
+                                <dd class="col-6">71.2 t</dd>
+                                <dt class="col-6">Temps calcul:</dt>
+                                <dd class="col-6">5.8s</dd>
+                            </dl>
+                            <div class="alert alert-warning">
+                                <small><i class="bi bi-exclamation-triangle me-1"></i>Très précis mais nécessite plus de données et de temps</small>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="tab-pane fade" id="ensemble-model" role="tabpanel">
+                    <div class="row">
+                        <div class="col-md-8">
+                            <div class="chart-canvas-container" style="height: 300px;">
+                                <canvas id="chart-model-ensemble"></canvas>
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <h5>Métriques du Modèle</h5>
+                            <dl class="row">
+                                <dt class="col-6">Précision (R²):</dt>
+                                <dd class="col-6">0.93</dd>
+                                <dt class="col-6">RMSE:</dt>
+                                <dd class="col-6">76.8 t</dd>
+                                <dt class="col-6">MAE:</dt>
+                                <dd class="col-6">62.4 t</dd>
+                                <dt class="col-6">Temps calcul:</dt>
+                                <dd class="col-6">8.2s</dd>
+                            </dl>
+                            <div class="alert alert-primary">
+                                <small><i class="bi bi-star-fill me-1"></i>Meilleure performance globale en combinant plusieurs modèles</small>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Actions et export -->
+<div class="row" data-aos="fade-up" data-aos-delay="600">
+    <div class="col-lg-4 mb-4">
+        <div class="card-modern p-4 text-center">
+            <i class="bi bi-download fs-1 text-primary mb-3"></i>
+            <h5>Exporter les Prévisions</h5>
+            <p class="text-muted">Téléchargez les prévisions détaillées au format de votre choix</p>
+            <div class="d-grid gap-2">
+                <button class="btn btn-primary" onclick="exporterPrevisions('pdf')">
+                    <i class="bi bi-file-pdf me-2"></i>Rapport PDF
+                </button>
+                <button class="btn btn-outline-primary" onclick="exporterPrevisions('excel')">
+                    <i class="bi bi-file-excel me-2"></i>Données Excel
+                </button>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-lg-4 mb-4">
+        <div class="card-modern p-4 text-center">
+            <i class="bi bi-bell fs-1 text-warning mb-3"></i>
+            <h5>Configurer les Alertes</h5>
+            <p class="text-muted">Recevez des notifications pour les événements importants</p>
+            <div class="d-grid gap-2">
+                <button class="btn btn-warning" onclick="configurerAlertes()">
+                    <i class="bi bi-gear me-2"></i>Paramètres d'alertes
+                </button>
+                <button class="btn btn-outline-warning" onclick="testerAlerte()">
+                    <i class="bi bi-send me-2"></i>Tester une alerte
+                </button>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-lg-4 mb-4">
+        <div class="card-modern p-4 text-center">
+            <i class="bi bi-share fs-1 text-success mb-3"></i>
+            <h5>Partager les Analyses</h5>
+            <p class="text-muted">Collaborez avec votre équipe sur les prévisions</p>
+            <div class="d-grid gap-2">
+                <button class="btn btn-success" onclick="partagerAnalyse()">
+                    <i class="bi bi-people me-2"></i>Inviter l'équipe
+                </button>
+                <button class="btn btn-outline-success" onclick="genererLien()">
+                    <i class="bi bi-link-45deg me-2"></i>Créer un lien
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal pour afficher le calendrier complet -->
+<div class="modal fade" id="calendrierModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-xl">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Calendrier Agricole Optimisé - Saison 2024</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <div id="calendrier-complet">
+                    <!-- Contenu du calendrier généré dynamiquement -->
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Fermer</button>
+                <button type="button" class="btn btn-primary" onclick="imprimerCalendrier()">
+                    <i class="bi bi-printer me-2"></i>Imprimer
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="{% static 'js/previsions.js' %}"></script>
+{% endblock %}
