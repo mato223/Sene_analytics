@@ -167,18 +167,6 @@ Utilisez les filtres en haut de page pour :
 - **CSV** : Cliquez sur "Exporter CSV" pour télécharger les données filtrées
 - **Graphiques** : Utilisez les boutons de téléchargement sur chaque graphique
 
-## 🔧 Configuration avancée
-
-### Base de données PostgreSQL
-
-Pour utiliser PostgreSQL au lieu de SQLite :
-
-1. Installer PostgreSQL et créer une base de données
-2. Installer le driver : `pip install psycopg2-binary`
-3. Configurer dans `.env` :
-   ```env
-   DATABASE_URL=postgresql://user:password@localhost:5432/tchia_db
-   ```
 
 ### Cache Redis
 
