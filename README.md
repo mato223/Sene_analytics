@@ -1,4 +1,4 @@
-# TCHIA Analytics Dashboard
+# Sene_analytics Dashboard
 
 Dashboard d'analyse des données agricoles et météorologiques pour l'Office du Niger (Mali).
 
@@ -24,7 +24,7 @@ Dashboard d'analyse des données agricoles et météorologiques pour l'Office du
 
 ```bash
 git clone https://github.com/votre-repo/tchia-analytics.git
-cd tchia-analytics
+cd Sene_analytics
 ```
 
 ### 2. Créer un environnement virtuel
@@ -91,7 +91,7 @@ Le dashboard sera accessible à l'adresse : http://localhost:8000/dashboard/
 ## 📁 Structure du projet
 
 ```
-tchia_analytics/
+Sene_analytics/
 ├── manage.py                 # Script de gestion Django
 ├── requirements.txt          # Dépendances Python
 ├── .env                     # Variables d'environnement (à créer)
@@ -190,90 +190,3 @@ Pour améliorer les performances avec Redis :
    ```env
    REDIS_URL=redis://localhost:6379/0
    ```
-
-### Production avec Gunicorn
-
-```bash
-gunicorn tchia_analytics.wsgi:application --bind 0.0.0.0:8000
-```
-
-### Production avec Nginx
-
-Exemple de configuration Nginx :
-
-```nginx
-server {
-    listen 80;
-    server_name your-domain.com;
-
-    location /static/ {
-        alias /path/to/tchia_analytics/staticfiles/;
-    }
-
-    location /media/ {
-        alias /path/to/tchia_analytics/media/;
-    }
-
-    location / {
-        proxy_pass http://127.0.0.1:8000;
-        proxy_set_header Host $host;
-        proxy_set_header X-Real-IP $remote_addr;
-    }
-}
-```
-
-## 🧪 Tests
-
-Lancer les tests :
-
-```bash
-pytest
-# ou
-python manage.py test
-```
-
-Avec couverture :
-
-```bash
-coverage run -m pytest
-coverage report
-coverage html
-```
-
-## 🐛 Débogage
-
-### Mode debug
-
-En développement, assurez-vous que `DEBUG=True` dans `.env`.
-
-### Django Debug Toolbar
-
-La toolbar de debug est automatiquement activée en mode DEBUG.
-
-### Logs
-
-Les logs sont sauvegardés dans `debug.log` à la racine du projet.
-
-## 📝 Contribution
-
-1. Fork le projet
-2. Créer une branche (`git checkout -b feature/nouvelle-fonctionnalite`)
-3. Commit (`git commit -am 'Ajout nouvelle fonctionnalité'`)
-4. Push (`git push origin feature/nouvelle-fonctionnalite`)
-5. Créer une Pull Request
-
-## 📄 Licence
-
-Ce projet est sous licence MIT. Voir le fichier `LICENSE` pour plus de détails.
-
-## 🤝 Support
-
-Pour toute question ou problème :
-- Créer une issue sur GitHub
-- Contact : support@tchia-analytics.ml
-
-## 🙏 Remerciements
-
-- Office du Niger pour les données
-- Équipe de développement TCHIA
-- Communauté Django
